@@ -91,7 +91,7 @@ td{font-family:var(--f-mono)} th{font-weight:600}
   <header>
     <span class="eyebrow">Single-period inventory model</span>
     <h1>How much stock covers the day?</h1>
-    <p class="lede">The curve is the probability distribution of a vendor's total daily demand. The shaded area is the <b>service level</b>: the probability that demand is less than or equal to <b>Q</b>, the stock he starts the day with. Drag Q and watch the area change.</p>
+    <p class="lede">The curve is the probability distribution of a vendor's total daily demand. The shaded area is the <b>service level</b>: the probability that demand is less than or equal to <b>Q</b>, the stock the vendor starts the day with. Drag Q and watch the area change.</p>
   </header>
 
   <section class="concepts" aria-label="Key concepts">
@@ -101,11 +101,11 @@ td{font-family:var(--f-mono)} th{font-weight:600}
     </div>
     <div>
       <h3>Service level</h3>
-      <p>The probability that demand during the period does not exceed Q, so no customer is turned away: <code>SL = P(D ≤ Q)</code>. Raising Q raises the service level but leaves more unsold stock on average. For normal demand, <code>Q = μ + z·σ</code>, and <code>z·σ</code> is the <b>safety stock</b>.</p>
+      <p>The probability that demand during the period does not exceed Q, so no customer is turned away: <code>SL = P(D ≤ Q)</code>. Raising Q raises the service level but leaves more unsold stock on average. For normal demand, <code>Q = μ + Z·σ</code>, and <code>Z·σ</code> is the <b>safety stock</b>.</p>
     </div>
     <div>
       <h3>Choosing Q with costs</h3>
-      <p>Each unit short costs <b>Cu</b> (lost margin plus any goodwill loss). Each unit left over costs <b>Co</b> (purchase cost minus salvage). The best Q sets the service level equal to the <b>critical ratio</b> <code>Cu / (Cu + Co)</code>, which balances the two risks.</p>
+      <p>Each unit short costs <b>Cs</b>, the cost of shortage (lost margin plus any goodwill loss). Each unit left over costs <b>Co</b>, the cost of overage (purchase cost minus salvage). The best Q sets the service level equal to the <b>critical ratio</b> <code>Cs / (Cs + Co)</code>, which balances the two risks.</p>
     </div>
   </section>
 
@@ -114,7 +114,7 @@ td{font-family:var(--f-mono)} th{font-weight:600}
     <div class="readout">
       <div class="stat"><span class="lbl">Service level</span><span class="big" id="slBig">93.3%</span></div>
       <div class="stat"><span class="lbl">Stock Q</span><span class="v" id="qVal">95</span></div>
-      <div class="stat"><span class="lbl">z-score</span><span class="v" id="zVal">1.50</span></div>
+      <div class="stat"><span class="lbl">Z-score</span><span class="v" id="zVal">1.50</span></div>
       <div class="stat"><span class="lbl">Stockout risk</span><span class="v" id="soVal">6.7%</span></div>
     </div>
   </section>
@@ -134,7 +134,7 @@ td{font-family:var(--f-mono)} th{font-weight:600}
         <div class="row"><label for="target">Or set a target service level</label><output id="tOut" for="target">93%</output></div>
         <input type="range" id="target" min="1" max="99" step="1" value="93">
       </div>
-      <p class="note">Service level = Φ((Q − μ) / σ). Working backwards, Q = μ + z·σ, where z is the standard normal value for the target probability. In Excel: <code>=NORM.DIST(Q, μ, σ, TRUE)</code> and <code>=NORM.INV(SL, μ, σ)</code>.</p>
+      <p class="note">Service level = Φ((Q − μ) / σ). Working backwards, Q = μ + Z·σ, where Z is the standard normal value for the target probability. In Excel: <code>=NORM.DIST(Q, μ, σ, TRUE)</code> and <code>=NORM.INV(SL, μ, σ)</code>.</p>
     </section>
 
     <section class="panel quiz" aria-labelledby="quizH">
@@ -166,11 +166,11 @@ td{font-family:var(--f-mono)} th{font-weight:600}
     <p class="fb no" id="costErr"></p>
     <div class="split">
       <dl class="calc">
-        <dt>Underage cost Cu = p − c + g</dt><dd id="cu"></dd>
+        <dt>Shortage cost Cs = p − c + g</dt><dd id="cu"></dd>
         <dt>Overage cost Co = c − v</dt><dd id="co"></dd>
-        <dt>Critical ratio Cu / (Cu + Co)</dt><dd id="cr"></dd>
-        <dt>z* = Φ⁻¹(critical ratio)</dt><dd id="zs"></dd>
-        <dt>Optimal Q* = μ + z*·σ</dt><dd id="qs" class="hl"></dd>
+        <dt>Critical ratio Cs / (Cs + Co)</dt><dd id="cr"></dd>
+        <dt>Z* = Φ⁻¹(critical ratio)</dt><dd id="zs"></dd>
+        <dt>Optimal Q* = μ + Z*·σ</dt><dd id="qs" class="hl"></dd>
       </dl>
       <div class="compare">
         <table>
@@ -187,7 +187,7 @@ td{font-family:var(--f-mono)} th{font-weight:600}
       </div>
     </div>
     <div class="pbox"><svg id="pchart" viewBox="0 0 900 250" role="img" aria-label="Expected profit as a function of Q"></svg></div>
-    <p class="note">Expected units short L(Q) = σ·[φ(z) − z(1 − Φ(z))]. Expected sales = μ − L. Expected leftover = Q − sales. Expected profit = p·sales + v·leftover − c·Q − g·L. In Excel, Q* is <code>=NORM.INV(Cu/(Cu+Co), μ, σ)</code>.</p>
+    <p class="note">Expected units short L(Q) = σ·[φ(Z) − Z(1 − Φ(Z))]. Expected sales = μ − L. Expected leftover = Q − sales. Expected profit = p·sales + v·leftover − c·Q − g·L. In Excel, Q* is <code>=NORM.INV(Cs/(Cs+Co), μ, σ)</code>.</p>
   </section>
 </div>
 
@@ -288,11 +288,11 @@ function newQuestion(){
   const kind=Math.random()<0.6?"Q":"SL";
   if(kind==="Q"){const p=[5,10,15,20,25,30,35,40,45,54,60,65,70,75,80,85,90,95,97,98,99][Math.floor(Math.random()*21)];
     const ans=mu+invPhi(p/100)*sd;
-    cur={kind,ans,tol:Math.max(0.6,sd*0.03),sol:`z = NORM.S.INV(${p/100}) = ${invPhi(p/100).toFixed(3)}, so Q = ${mu} + ${invPhi(p/100).toFixed(3)} × ${sd} = ${ans.toFixed(2)} ≈ ${Math.round(ans)} units.`,
-      text:`If the vendor wants a service level of <b>${p}%</b>, what should his initial stock level be each morning? (units, rounded)`};
+    cur={kind,ans,tol:Math.max(0.6,sd*0.03),sol:`Z = NORM.S.INV(${p/100}) = ${invPhi(p/100).toFixed(3)}, so Q = ${mu} + ${invPhi(p/100).toFixed(3)} × ${sd} = ${ans.toFixed(2)} ≈ ${Math.round(ans)} units.`,
+      text:`If the vendor wants a service level of <b>${p}%</b>, what should the initial stock level be each morning? (units, rounded)`};
   }else{const q=Math.round(mu+(Math.random()*5-2.5)*sd);const z=(q-mu)/sd,ans=Phi(z)*100;
-    cur={kind,ans,tol:0.6,sol:`z = (${q} − ${mu}) / ${sd} = ${z.toFixed(2)}, and Φ(${z.toFixed(2)}) = ${ans.toFixed(1)}%.`,
-      text:`If the vendor starts the day with <b>${q} units</b>, what service level does he provide? (percent, one decimal)`};}
+    cur={kind,ans,tol:0.6,sol:`Z = (${q} − ${mu}) / ${sd} = ${z.toFixed(2)}, and Φ(${z.toFixed(2)}) = ${ans.toFixed(1)}%.`,
+      text:`If the vendor starts the day with <b>${q} units</b>, what service level does the vendor provide? (percent, one decimal)`};}
   $("qText").innerHTML=cur.text;$("ans").value="";$("fb").textContent="";$("fb").className="fb";cur.done=false;
 }
 $("check").addEventListener("click",()=>{
@@ -367,6 +367,5 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
 new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 syncRange();update();newQuestion();
 </script>
-
 </body>
 </html>

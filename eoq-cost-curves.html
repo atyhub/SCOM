@@ -130,18 +130,18 @@ button:hover{opacity:.88}
       </div>
       <div class="field">
         <div class="row"><span class="lbl">Holding cost entered as</span>
-          <span class="seg" role="group" aria-label="Holding cost mode"><button id="mH" aria-pressed="true">H directly</button><button id="mI" aria-pressed="false">i × C</button></span></div>
+          <span class="seg" role="group" aria-label="Holding cost mode"><button id="mH" aria-pressed="true">H directly</button><button id="mI" aria-pressed="false">I × P</button></span></div>
       </div>
       <div class="field" id="fH">
         <div class="row"><label for="H">Holding cost, H ($/unit/year)</label><output id="HOut" for="H">$0.50</output></div>
         <input type="range" id="H" min="0.1" max="5" step="0.05" value="0.5">
       </div>
       <div class="field hidden" id="fI">
-        <div class="row"><label for="I">Carrying rate, i (% of unit cost per year)</label><output id="IOut" for="I">20%</output></div>
+        <div class="row"><label for="I">Holding cost rate, I (% of unit price per year)</label><output id="IOut" for="I">20%</output></div>
         <input type="range" id="I" min="5" max="50" step="1" value="20">
       </div>
       <div class="field hidden" id="fC">
-        <div class="row"><label for="C">Unit cost, C ($/unit)</label><output id="COut" for="C">$2.50</output></div>
+        <div class="row"><label for="C">Unit price, P ($/unit)</label><output id="COut" for="C">$2.50</output></div>
         <input type="range" id="C" min="0.5" max="20" step="0.5" value="2.5">
       </div>
       <div class="sub">Your order quantity</div>
@@ -332,7 +332,7 @@ function update(){
   if(Math.abs(Q-q)/q<0.02) s="Your Q is at the EOQ: holding and ordering cost are equal, and total cost is as low as it gets.";
   else if(Q>q) s=`Your Q is ${fmt(Q/q*100-100)}% above the EOQ. You order less often (${fmt(P.D/Q,1)} times a year), but carry more stock, so <b>holding cost dominates</b>.`;
   else s=`Your Q is ${fmt(100-Q/q*100)}% below the EOQ. You keep little stock, but place ${fmt(P.D/Q,1)} orders a year, so <b>ordering cost dominates</b>.`;
-  if(P.mode==="I") s+=` Here H = i × C = ${P.I}% × ${money(P.C,2)} = ${money(Hh,2)} per unit per year.`;
+  if(P.mode==="I") s+=` Here H = I × P = ${P.I}% × ${money(P.C,2)} = ${money(Hh,2)} per unit per year.`;
   $("story").innerHTML=s;
   draw();
 }
