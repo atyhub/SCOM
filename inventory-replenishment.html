@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory Replenishment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same visual system as the Newsvendor Service Level page */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --fill:#2a9474; --curve:#18232d; --marker:#d9622b; --ss:#6a5acd;
+  --good:#2f8a57; --bad:#c2412d;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --curve:#e6ecf1; --marker:#f08a52; --ss:#a99cf5;
+  --good:#5cc58a; --bad:#ef7a66; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --curve:#e6ecf1; --marker:#f08a52; --ss:#a99cf5;
+  --good:#5cc58a; --bad:#ef7a66; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 40px;display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
+h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:70ch;margin:0}
+.lede b{color:var(--ink)}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 10px 10px;display:grid;gap:10px;min-width:0}
+.svgbox{overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:0 6px}
+.bar .grow{flex:1 1 160px;display:flex;align-items:center;gap:10px}
+.bar .grow input{flex:1}
+.live{display:flex;flex-wrap:wrap;gap:8px 22px;padding:0 6px;font:500 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.live b{color:var(--ink);font-weight:600}
+.event{padding:8px 12px;margin:0 6px;border-radius:6px;background:var(--bg);font:500 13px var(--f-mono);min-height:2.4em;display:flex;align-items:center;gap:8px}
+.event .dot{width:10px;height:10px;border-radius:50%;background:var(--marker);flex:none}
+.event.arr .dot{background:var(--fill)} .event.so .dot{background:var(--bad)}
+.event.flash{animation:fl .9s ease-out}
+@keyframes fl{from{box-shadow:0 0 0 3px var(--marker)}to{box-shadow:0 0 0 0 transparent}}
+.readout{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;padding:4px 6px 0}
+.big{font:700 clamp(30px,6vw,44px)/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--marker)}
+.lbl{font:600 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat{display:grid;gap:4px}
+.stat .v{font:600 22px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.stat .f{font:400 11px var(--f-mono);color:var(--muted)}
+.deck{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+@media (max-width:760px){.deck{grid-template-columns:1fr}}
+.panel{display:grid;gap:16px;align-content:start;min-width:0}
+h2{font:600 18px/1.2 var(--f-display);margin:0}
+.field{display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row output{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--marker)}
+input[type=number]{width:100%;font:500 15px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--marker);outline-offset:2px}
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.quiz p{margin:0}
+.ans{display:flex;gap:8px;flex-wrap:wrap}
+.ans input{flex:1 1 120px}
+button{font:600 14px var(--f-body);padding:9px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:hover{opacity:.88}
+.fb{min-height:1.4em;font-weight:500}
+.fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+.score{font:500 12px var(--f-mono);color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0;max-width:70ch}
+.note code{font-family:var(--f-mono);color:var(--ink)}
+.sub{font:600 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Continuous review · fixed order quantity</span>
+    <h1>When should we reorder?</h1>
+    <p class="lede">Stock is used at a steady <b>usage rate d</b>. When the inventory position falls to the <b>reorder point (ROP)</b>, an order of <b>Q</b> units is placed. It arrives one <b>lead time L</b> later, just as stock runs out. Press play and watch the sawtooth build.</p>
+  </header>
+
+
+  <section class="chart" aria-label="Inventory level over time">
+    <div class="bar">
+      <button id="play" aria-pressed="false">▶ Play</button>
+      <button class="ghost" id="reset">Restart</button>
+      <label class="grow"><span class="lbl">Speed</span><input type="range" id="speed" min="1" max="12" step="1" value="4" aria-label="Animation speed, days per second"><output id="speedOut" class="lbl">4 d/s</output></label>
+    </div>
+    <div class="svgbox"><svg id="plot" viewBox="0 0 900 400" role="img" aria-labelledby="plotDesc"><desc id="plotDesc">Sawtooth chart of on-hand inventory over time, with the reorder point, average inventory and lead time marked.</desc></svg></div>
+    <div class="live" aria-hidden="true">
+      <span>Day <b id="lvDay">0.0</b></span>
+      <span>On hand <b id="lvOn">0</b></span>
+      <span>On order <b id="lvOrd">0</b></span>
+      <span>Inventory position <b id="lvPos">0</b></span>
+    </div>
+    <div class="event" id="event" aria-live="polite"><span class="dot"></span><span id="eventText">Press play to start the clock.</span></div>
+    <div class="readout">
+      <div class="stat"><span class="lbl">Reorder point</span><span class="big" id="ropBig">80</span><span class="f" id="ropF">d × L + SS</span></div>
+      <div class="stat"><span class="lbl">Average inventory</span><span class="v" id="avgV">100</span><span class="f">Q/2 + SS</span></div>
+      <div class="stat"><span class="lbl">Time between orders</span><span class="v" id="cycV">10.0 d</span><span class="f">Q / d</span></div>
+      <div class="stat"><span class="lbl">Orders per year</span><span class="v" id="opyV">36.5</span><span class="f">365·d / Q</span></div>
+      <div class="stat"><span class="lbl">Cycles without stockout</span><span class="v" id="cslV">–</span><span class="f" id="cslF">observed so far</span></div>
+    </div>
+  </section>
+
+  <div class="deck">
+    <section class="panel" aria-labelledby="ctlH">
+      <h2 id="ctlH">Model settings</h2>
+      <div class="field">
+        <div class="row"><label for="d">Usage rate, d (units/day)</label><output id="dOut" for="d">20</output></div>
+        <input type="range" id="d" min="5" max="50" step="1" value="20">
+      </div>
+      <div class="field">
+        <div class="row"><label for="Q">Order quantity, Q (units)</label><output id="QOut" for="Q">200</output></div>
+        <input type="range" id="Q" min="50" max="500" step="10" value="200">
+      </div>
+      <div class="field">
+        <div class="row"><label for="L">Lead time, L (days)</label><output id="LOut" for="L">4</output></div>
+        <input type="range" id="L" min="1" max="20" step="1" value="4">
+      </div>
+      <div class="field">
+        <div class="row"><label for="SS">Safety stock, SS (units)</label><output id="SSOut" for="SS">0</output></div>
+        <input type="range" id="SS" min="0" max="150" step="5" value="0">
+      </div>
+      <div class="sub">Uncertain demand</div>
+      <div class="field">
+        <div class="row"><label for="cv">Day-to-day demand variation</label><output id="cvOut" for="cv">none</output></div>
+        <input type="range" id="cv" min="0" max="60" step="5" value="0">
+      </div>
+      <p class="note">With constant demand, the order arrives exactly when stock hits zero. Add variation and some lead times end in a <b style="color:var(--bad)">stockout</b> (red, shown as backorders). Then raise the safety stock and watch the stockouts disappear: the ROP rises to <code>d × L + SS</code> and the whole sawtooth lifts by SS.</p>
+      <p class="note">The trigger is the <b>inventory position</b> (on hand + on order), not on-hand stock. Set L longer than Q/d to see why: more than one order is in transit at once.</p>
+    </section>
+
+    <section class="panel quiz" aria-labelledby="quizH">
+      <div class="row"><h2 id="quizH">Check your understanding</h2><span class="score" id="score">0 / 0</span></div>
+      <p id="qText"></p>
+      <div class="ans">
+        <input type="number" id="ans" aria-label="Your answer" placeholder="Your answer" step="any">
+        <button id="check">Check</button>
+      </div>
+      <p class="fb" id="fb" aria-live="polite"></p>
+      <div class="ans">
+        <button class="ghost" id="show">Show solution</button>
+        <button class="ghost" id="next">New question</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const P={d:20,Q:200,L:4,SS:0,cv:0,speed:4};
+const ROP=()=>P.d*P.L+P.SS;
+const fmt=(x,n=0)=>(Math.round(x*10**n)/10**n).toLocaleString("en-US",{minimumFractionDigits:n,maximumFractionDigits:n});
+
+// --- seeded randomness so "Restart" replays the same demand ---
+function rng(seed){return()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r());}
+
+// --- simulation ---
+let S, WIN;
+function reset(){
+  const C=P.Q/P.d;
+  WIN=Math.min(150,Math.max(24,Math.ceil(3.6*C+P.L)));
+  S={t:0,I:P.Q+P.SS,pipe:[],hist:[],orders:[],arrivals:[],rand:rng(20261013),rate:P.d,day:-1,cycles:0,okCycles:0,so:false,last:null};
+  // start in steady state: orders already in transit that would have been placed before day 0
+  for(let m=1;m*C<P.L-1e-9;m++){S.pipe.push(m*C);S.orders.push({t:m*C-P.L,a:m*C,y:null});}
+  while(S.I+S.pipe.length*P.Q<=ROP()+1e-9&&S.pipe.length<50){S.pipe.push(P.L);S.orders.push({t:0,a:P.L,y:S.I,p:S.I+S.pipe.length*P.Q});}
+  S.pipe.sort((a,b)=>a-b);
+  S.hist.push([0,S.I,S.I+S.pipe.length*P.Q]);
+  setEvent("","Press play to start the clock.");
+  updateStats();draw();
+}
+function setEvent(kind,text){const e=$("event");e.className="event "+kind;$("eventText").textContent=text;
+  if(kind&&!reduce){void e.offsetWidth;e.classList.add("flash");}}
+
+function advance(T){
+  let guard=0;
+  while(S.t<T-1e-9&&guard++<5000){
+    const day=Math.floor(S.t+1e-9);
+    if(day!==S.day){S.day=day;S.rate=P.cv>0?Math.max(0,P.d*(1+P.cv/100*gauss(S.rand))):P.d;}
+    let tEnd=Math.min(T,day+1);
+    if(S.pipe.length&&S.pipe[0]<tEnd)tEnd=S.pipe[0];
+    const span=tEnd-S.t, R=ROP();
+    const pos0=S.I+S.pipe.length*P.Q, pos1=pos0-S.rate*span;
+    if(pos0>R+1e-9&&pos1<=R+1e-9){
+      const tc=S.t+(pos0-R)/S.rate, y=S.I-S.rate*(tc-S.t);
+      S.pipe.push(tc+P.L);S.pipe.sort((a,b)=>a-b);
+      S.orders.push({t:tc,a:tc+P.L,y,p:R});
+      setEvent("",`Day ${fmt(tc,1)}: inventory position hit the ROP of ${fmt(R)}. Order of ${P.Q} placed, due day ${fmt(tc+P.L,1)}.`);
+    }
+    const prevI=S.I;
+    S.I-=S.rate*span; S.t=tEnd;
+    if(S.I<-1e-9&&prevI>=-1e-9){S.so=true;setEvent("so",`Day ${fmt(S.t,1)}: stockout. Demand is now backordered until the next delivery.`);}
+    S.hist.push([S.t,S.I,S.I+S.pipe.length*P.Q]);
+    while(S.pipe.length&&S.pipe[0]<=S.t+1e-9){
+      S.pipe.shift(); S.I+=P.Q; S.hist.push([S.t,S.I,S.I+S.pipe.length*P.Q]); S.arrivals.push({t:S.t,y:S.I});
+      S.cycles++; if(!S.so)S.okCycles++; S.so=S.I<0;
+      setEvent("arr",`Day ${fmt(S.t,1)}: order received. On hand jumps by Q = ${P.Q} to ${fmt(S.I)}.`);
+    }
+  }
+  const cut=S.t-WIN-2;
+  if(S.hist.length>4000||S.hist[0][0]<cut-20){S.hist=S.hist.filter(p=>p[0]>=cut);S.orders=S.orders.filter(o=>o.a>=cut);S.arrivals=S.arrivals.filter(a=>a.t>=cut);}
+}
+
+// --- drawing ---
+const svg=$("plot"), W=900,H=400,ML=58,MR=20,MT=26,MB=74;
+function draw(){
+  const css=getComputedStyle(document.documentElement),v=n=>css.getPropertyValue(n).trim();
+  const top=P.Q+P.SS, R=ROP();
+  const ymax=Math.max(top,P.L>=P.Q/P.d?R+P.Q:R)*1.16, ymin=P.cv>0?-0.32*top:0;
+  const x0=Math.max(0,S.t-WIN), x1=x0+WIN;
+  const X=t=>ML+(t-x0)/(x1-x0)*(W-ML-MR), Y=y=>MT+(ymax-y)/(ymax-ymin)*(H-MT-MB);
+  const yb=Y(Math.max(ymin,Math.min(0,ymax)));
+  let s="";
+  s+=`<defs><clipPath id="cp"><rect x="${ML}" y="${MT}" width="${W-ML-MR}" height="${Y(0)-MT}"/></clipPath>`+
+     `<clipPath id="cn"><rect x="${ML}" y="${Y(0)}" width="${W-ML-MR}" height="${Math.max(0,H-MB-Y(0))}"/></clipPath>`+
+     `<clipPath id="ca"><rect x="${ML}" y="0" width="${W-ML-MR}" height="${H}"/></clipPath></defs>`;
+  // y grid
+  const st=[10,20,25,50,100,200].find(k=>(ymax-ymin)/k<=7)||250;
+  for(let y=Math.ceil(ymin/st)*st;y<=ymax;y+=st){
+    s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(y)}" y2="${Y(y)}" stroke="${v("--line")}"/>`;
+    s+=`<text x="${ML-8}" y="${Y(y)+4}" text-anchor="end">${y}</text>`;
+  }
+  // x ticks
+  const xs=[1,2,5,10,20,25,50].find(k=>WIN/k<=12);
+  for(let t=Math.ceil(x0/xs)*xs;t<=x1+1e-9;t+=xs){
+    s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${H-MB}" y2="${H-MB+5}" stroke="${v("--muted")}"/>`;
+    s+=`<text x="${X(t)}" y="${H-MB+19}" text-anchor="middle">${t}</text>`;
+  }
+  s+=`<text x="${W-MR}" y="${H-4}" text-anchor="end">time (days)</text>`;
+  s+=`<text transform="translate(14 ${(MT+H-MB)/2}) rotate(-90)" text-anchor="middle">inventory level (units)</text>`;
+  // inventory area + line
+  const pts=S.hist.filter((p,i,a)=>p[0]>=x0-1||(a[i+1]&&a[i+1][0]>=x0-1));
+  if(pts.length>1){
+    let line=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ");
+    const area=line+` L${X(pts[pts.length-1][0]).toFixed(1)},${Y(0)} L${X(pts[0][0]).toFixed(1)},${Y(0)} Z`;
+    s+=`<g clip-path="url(#ca)"><path d="${area}" fill="${v("--fill")}" fill-opacity=".55" clip-path="url(#cp)"/>`;
+    s+=`<path d="${area}" fill="${v("--bad")}" fill-opacity=".55" clip-path="url(#cn)"/>`;
+    s+=`<path d="${line}" fill="none" stroke="${v("--curve")}" stroke-width="2" stroke-linejoin="round"/></g>`;
+  }
+  const showPos=P.L>=P.Q/P.d;
+  if(showPos&&pts.length>1){
+    const pl=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+","+Y(p[2]).toFixed(1)).join(" ");
+    s+=`<path d="${pl}" fill="none" stroke="${v("--marker")}" stroke-width="1.6" stroke-dasharray="5 3" clip-path="url(#ca)"/>`;
+    const lp=pts[pts.length-1];
+    s+=`<text x="${X(lp[0])-8}" y="${Y(lp[2])-10}" text-anchor="end" style="fill:${v("--marker")};paint-order:stroke;stroke:${v("--surface")};stroke-width:4px">inventory position = on hand + on order</text>`;
+  }
+  // zero axis
+  s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(0)}" y2="${Y(0)}" stroke="${v("--muted")}" stroke-width="1.2"/>`;
+  if(ymin<0) s+=`<text x="${W-MR-6}" y="${Y(0)+16}" text-anchor="end" style="fill:${v("--bad")}">below 0 = backorders</text>`;
+  s+=`<line x1="${ML}" x2="${ML}" y1="${MT}" y2="${H-MB}" stroke="${v("--muted")}"/>`;
+  // reference lines
+  const ref=(y,col,dash,label,anchorLeft,above=true)=>{
+    s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(y)}" y2="${Y(y)}" stroke="${col}" stroke-width="1.5" stroke-dasharray="${dash}"/>`;
+    const tx=anchorLeft?ML+8:W-MR-6, ty=Y(y)+(above?-6:15);
+    s+=`<text x="${tx}" y="${ty}" text-anchor="${anchorLeft?"start":"end"}" style="fill:${col};paint-order:stroke;stroke:${v("--surface")};stroke-width:4px">${label}</text>`;
+  };
+  const avg=P.Q/2+P.SS;
+  ref(top,v("--muted"),"2 4",`Max = Q${P.SS?" + SS":""} = ${top}`,false);
+  ref(avg,v("--muted"),"8 5",`Average = Q/2${P.SS?" + SS":""} = ${fmt(avg)}`,false,Math.abs(Y(avg)-Y(R))>16||Y(avg)<Y(R));
+  if(P.SS>0) ref(P.SS,v("--ss"),"4 3",`Safety stock = ${P.SS}`,false,true);
+  ref(R,v("--marker"),"6 4",`ROP = d×L${P.SS?" + SS":""} = ${fmt(R)}`,true,true);
+  // lead-time lane under the axis
+  const lane=H-MB+42;
+  s+=`<text x="${ML-8}" y="${lane+4}" text-anchor="end" style="fill:${v("--marker")}">L</text>`;
+  const vis=S.orders.filter(o=>o.a>=x0&&o.t<=S.t);
+  vis.forEach((o,i)=>{
+    const a=Math.max(o.t,x0), b=Math.min(o.a,S.t), done=o.a<=S.t+1e-9;
+    const off=(i%2)*10, yy=lane+off-5;
+    if(b<=a)return;
+    s+=`<line x1="${X(a)}" x2="${X(b)}" y1="${yy}" y2="${yy}" stroke="${v("--marker")}" stroke-width="2" ${done?"":'stroke-dasharray="4 3"'}/>`;
+    if(o.t>=x0) s+=`<line x1="${X(o.t)}" x2="${X(o.t)}" y1="${yy-4}" y2="${yy+4}" stroke="${v("--marker")}" stroke-width="2"/>`;
+    if(done) s+=`<line x1="${X(o.a)}" x2="${X(o.a)}" y1="${yy-4}" y2="${yy+4}" stroke="${v("--marker")}" stroke-width="2"/>`;
+    const w=X(b)-X(a);
+    if(w>46) s+=`<text x="${(X(a)+X(b))/2}" y="${yy-5}" text-anchor="middle" style="fill:${v("--marker")};font-size:11px">${done?"L = "+P.L+" d":"in transit"}</text>`;
+    // dotted link from order point down to the lane
+    if(o.y!=null&&o.t>=x0) s+=`<line x1="${X(o.t)}" x2="${X(o.t)}" y1="${Y(showPos?o.p:o.y)}" y2="${yy-4}" stroke="${v("--marker")}" stroke-dasharray="1 3" opacity=".8"/>`;
+  });
+  // order markers + arrival markers
+  const ord=S.orders.filter(o=>o.y!=null&&o.t>=x0&&o.t<=S.t);
+  const my=o=>showPos?o.p:o.y;
+  ord.forEach(o=>{s+=`<circle cx="${X(o.t)}" cy="${Y(my(o))}" r="6" fill="${v("--marker")}" stroke="${v("--surface")}" stroke-width="2"/>`;});
+  const arr=S.arrivals.filter(a=>a.t>=x0);
+  arr.forEach(a=>{s+=`<path d="M${X(a.t)-6},${Y(a.y)-12} L${X(a.t)+6},${Y(a.y)-12} L${X(a.t)},${Y(a.y)-3} Z" fill="${v("--fill")}"/>`;});
+  // callouts for the latest events
+  const lab=(x,y,txt,col,dx)=>{const anchor=dx<0?"end":"start";
+    s+=`<text x="${x+dx}" y="${y}" text-anchor="${anchor}" style="fill:${col};font-weight:600;paint-order:stroke;stroke:${v("--surface")};stroke-width:4px">${txt}</text>`;};
+  const lo=ord[ord.length-1]; if(lo){const right=X(lo.t)<W-200; lab(X(lo.t),Y(my(lo))-12,"Order placed",v("--marker"),right?10:-10);}
+  const la=arr[arr.length-1]; if(la){const right=X(la.t)<W-220; lab(X(la.t),Y(la.y)-18,"Order received (+Q)",v("--ink"),right?10:-10);}
+  // now cursor
+  if(S.t>0){const cy=Y(Math.max(ymin,S.I));
+    s+=`<line x1="${X(S.t)}" x2="${X(S.t)}" y1="${MT}" y2="${H-MB}" stroke="${v("--muted")}" stroke-dasharray="2 3" opacity=".7"/>`;
+    s+=`<circle cx="${X(S.t)}" cy="${cy}" r="4.5" fill="${v("--curve")}"/>`;}
+  svg.innerHTML=`<desc id="plotDesc">Sawtooth chart of on-hand inventory over time, with the reorder point, average inventory and lead time marked.</desc>`+s;
+  // live numbers
+  const onOrder=S.pipe.length*P.Q;
+  $("lvDay").textContent=fmt(S.t,1); $("lvOn").textContent=fmt(S.I); $("lvOrd").textContent=fmt(onOrder); $("lvPos").textContent=fmt(S.I+onOrder);
+  $("cslV").textContent=S.cycles?fmt(100*S.okCycles/S.cycles,0)+"%":"–";
+  $("cslF").textContent=S.cycles?`${S.okCycles} of ${S.cycles} cycles`:"observed so far";
+}
+
+function updateStats(){
+  $("ropBig").textContent=fmt(ROP());
+  $("ropF").textContent=`${P.d} × ${P.L}${P.SS?" + "+P.SS:""}`;
+  $("avgV").textContent=fmt(P.Q/2+P.SS);
+  $("cycV").textContent=fmt(P.Q/P.d,1)+" d";
+  $("opyV").textContent=fmt(365*P.d/P.Q,1);
+}
+
+// --- animation loop ---
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let playing=false,lastTs=null;
+function frame(ts){
+  if(!playing)return;
+  if(lastTs!=null){const dt=Math.min(0.1,(ts-lastTs)/1000);advance(S.t+dt*P.speed);draw();}
+  lastTs=ts;requestAnimationFrame(frame);
+}
+function setPlaying(p){playing=p;$("play").textContent=p?"❚❚ Pause":"▶ Play";$("play").setAttribute("aria-pressed",p);
+  if(p){lastTs=null;if(S.t===0)setEvent("","Clock running. Stock is used at d = "+P.d+" units per day.");requestAnimationFrame(frame);}}
+$("play").addEventListener("click",()=>setPlaying(!playing));
+$("reset").addEventListener("click",()=>{reset();if(reduce){advance(WIN);draw();}});
+$("speed").addEventListener("input",e=>{P.speed=+e.target.value;$("speedOut").textContent=P.speed+" d/s";});
+for(const k of ["d","Q","L","SS","cv"]){
+  $(k).addEventListener("input",e=>{P[k]=+e.target.value;
+    $(k+"Out").textContent=k==="cv"?(P.cv?"±"+P.cv+"% (σ)":"none"):P[k];
+    reset(); if(!playing){advance(reduce?WIN:0);draw();}});
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>draw());
+new MutationObserver(()=>draw()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+// --- quiz ---
+const ri=(a,b,s=1)=>a+s*Math.floor(Math.random()*((b-a)/s+1));
+let cur=null,right=0,tries=0;
+function newQuestion(){
+  const k=Math.floor(Math.random()*4);
+  if(k===0){const d=ri(10,60),L=ri(2,10),ss=Math.random()<.5?0:ri(10,60,5);const ans=d*L+ss;
+    cur={ans,tol:0.5,text:`A clinic uses <b>${d}</b> boxes of gloves per day. The supplier's lead time is <b>${L}</b> days${ss?` and the clinic keeps <b>${ss}</b> boxes of safety stock`:" and demand is constant"}. What is the reorder point? (boxes)`,
+      sol:`ROP = d × L${ss?" + SS":""} = ${d} × ${L}${ss?" + "+ss:""} = ${ans} boxes.`};}
+  else if(k===1){const Q=ri(100,800,50),ss=Math.random()<.5?0:ri(10,80,10);const ans=Q/2+ss;
+    cur={ans,tol:0.5,text:`A store orders <b>${Q}</b> units each time${ss?` and holds <b>${ss}</b> units of safety stock`:""}. What is its average inventory? (units)`,
+      sol:`Average inventory = Q/2${ss?" + SS":""} = ${Q}/2${ss?" + "+ss:""} = ${ans} units.`};}
+  else if(k===2){const d=ri(10,50),Q=ri(100,600,50);const D=d*365,ans=Q/d;
+    cur={ans,tol:0.05,text:`Annual demand is <b>${D.toLocaleString("en-US")}</b> units (365 days a year) and the order quantity is <b>${Q}</b>. How many days pass between orders? (one decimal)`,
+      sol:`Daily demand d = ${D.toLocaleString("en-US")}/365 = ${d}. Time between orders = Q/d = ${Q}/${d} = ${ans.toFixed(2)} days.`};}
+  else {const d=ri(10,50),Q=ri(100,600,50);const D=d*365,ans=D/Q;
+    cur={ans,tol:0.05,text:`Annual demand is <b>${D.toLocaleString("en-US")}</b> units and each order is for <b>${Q}</b> units. How many orders are placed per year? (one decimal)`,
+      sol:`Orders per year = D/Q = ${D.toLocaleString("en-US")}/${Q} = ${ans.toFixed(2)}.`};}
+  cur.done=false;$("qText").innerHTML=cur.text;$("ans").value="";$("fb").textContent="";$("fb").className="fb";
+}
+$("check").addEventListener("click",()=>{
+  const a=parseFloat($("ans").value);if(!isFinite(a)){$("fb").textContent="Enter a number first.";$("fb").className="fb no";return;}
+  const ok=Math.abs(a-cur.ans)<=cur.tol+1e-9;
+  if(!cur.done){tries++;if(ok)right++;cur.done=ok;}
+  $("score").textContent=`${right} / ${tries}`;
+  $("fb").textContent=ok?"Correct. Try the same numbers on the sliders.":(a<cur.ans?"Too low. Try again.":"Too high. Try again.");
+  $("fb").className="fb "+(ok?"ok":"no");
+});
+$("ans").addEventListener("keydown",e=>{if(e.key==="Enter")$("check").click();});
+$("show").addEventListener("click",()=>{$("fb").textContent=cur.sol;$("fb").className="fb";cur.done=true;});
+$("next").addEventListener("click",newQuestion);
+
+reset(); if(reduce){advance(WIN);draw();}
+newQuestion();
+</script>
+</body>
+</html>
