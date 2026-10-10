@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventory Record Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same visual system as the Newsvendor, EOQ and Replenishment pages */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --fill:#2a9474; --curve:#18232d; --marker:#d9622b; --blue:#3a6fb0;
+  --good:#2f8a57; --bad:#c2412d; --soft:#eef2f5;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --curve:#e6ecf1; --marker:#f08a52; --blue:#7fb0ea;
+  --good:#5cc58a; --bad:#ef7a66; --soft:#1f2a35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --curve:#e6ecf1; --marker:#f08a52; --blue:#7fb0ea;
+  --good:#5cc58a; --bad:#ef7a66; --soft:#1f2a35; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
+h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 20px/1.2 var(--f-display);margin:0}
+h3{font:600 16px/1.25 var(--f-display);margin:0}
+.lede{color:var(--muted);max-width:72ch;margin:0}
+.lede b{color:var(--ink)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{font:600 14px var(--f-body);padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;gap:8px;align-items:center}
+.tab .n{font:600 11px var(--f-mono);color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.tab[aria-selected="true"] .n{color:var(--surface);opacity:.7}
+.panel{display:grid;gap:16px}
+.panel[hidden]{display:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.idea{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:start}
+.idea svg{flex:none}
+.idea p{margin:4px 0 0;color:var(--muted);max-width:75ch}
+.idea p b{color:var(--ink)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){.card{padding:12px}.bin{padding:8px}.binn{font-size:20px}}
+.svgbox{overflow-x:auto}
+svg.chart{display:block;width:100%;height:auto;min-width:520px}
+svg text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+button{font:600 14px var(--f-body);padding:9px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button.warn{background:var(--marker);border-color:var(--marker);color:#fff}
+button:hover{opacity:.88}
+input:focus-visible,button:focus-visible{outline:2px solid var(--marker);outline-offset:2px}
+.controls{display:grid;gap:14px;align-content:start}
+.field{display:grid;gap:5px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row output{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--marker)}
+.check{display:flex;gap:8px;align-items:center}
+.check input{accent-color:var(--marker);width:16px;height:16px}
+.stats{display:flex;flex-wrap:wrap;gap:10px 26px}
+.stat{display:grid;gap:3px}
+.lbl{font:600 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.v{font:600 22px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.v.bad{color:var(--bad)} .v.good{color:var(--good)}
+.notice{margin:0;font-size:14px;color:var(--muted);display:grid;gap:6px;padding-left:18px}
+.notice li b{color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 12px var(--f-mono);color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.event{padding:9px 12px;border-radius:6px;background:var(--soft);font:500 13px var(--f-mono);min-height:2.4em;display:flex;align-items:center;gap:8px}
+.event .dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.event.ord .dot{background:var(--marker)} .event.arr .dot{background:var(--fill)} .event.so .dot{background:var(--bad)} .event.cnt .dot{background:var(--blue)}
+/* two-bin */
+.bins{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.bin{border:2px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px;background:var(--surface);transition:border-color .25s}
+.bin.active{border-color:var(--marker)}
+.bin.empty{border-style:dashed}
+.binhead{display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap}
+.tag{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.bin.active .tag{background:var(--marker);color:#fff}
+.units{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;min-height:40px}
+.u{aspect-ratio:1;border-radius:3px;background:var(--fill);transition:background .2s,opacity .2s}
+.u.gone{background:transparent;outline:1px dashed var(--line);outline-offset:-1px}
+.binn{font:600 26px var(--f-mono);font-variant-numeric:tabular-nums}
+.ordercard{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--soft)}
+.ordercard.sent{border-color:var(--marker)}
+.prog{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog div{height:100%;width:0;background:var(--marker);transition:width .3s}
+/* perpetual */
+.meters{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:stretch}
+@media (max-width:560px){.meters{grid-template-columns:1fr 1fr}.meters .gap{grid-column:1/-1}}
+.meter{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:4px;background:var(--surface)}
+.meter .big{font:700 34px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.gap{display:grid;place-items:center;padding:12px;border-radius:10px;background:var(--soft);text-align:center;min-width:120px}
+.gap .big{font:700 26px/1 var(--f-display)}
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:4px;font:500 12.5px var(--f-mono);max-height:220px;overflow:auto}
+.feed li{display:grid;grid-template-columns:52px 1fr auto;gap:8px;padding:5px 8px;border-radius:5px;background:var(--soft)}
+.feed .p{color:var(--good);font-weight:600} .feed .m{color:var(--ink);font-weight:600} .feed .x{color:var(--bad);font-weight:600} .feed .c{color:var(--blue);font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td b{font-family:var(--f-display);font-weight:600}
+.tablebox{overflow-x:auto}
+.note{font-size:13px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Inventory record accuracy</span>
+    <h1>How do we know what's on the shelf?</h1>
+    <p class="lede">Every reorder decision depends on knowing how much stock is really there. <b>Record accuracy</b> comes before inventory models, production schedules and, in the end, sales. There are three common ways to keep track. Pick one below, press play and watch what the manager knows compared with what is really on the shelf.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Record systems">
+    <button class="tab" role="tab" id="t-per" aria-controls="p-per" aria-selected="true"><span class="n">1</span>Periodic review</button>
+    <button class="tab" role="tab" id="t-bin" aria-controls="p-bin" aria-selected="false"><span class="n">2</span>Two-bin system</button>
+    <button class="tab" role="tab" id="t-pp" aria-controls="p-pp" aria-selected="false"><span class="n">3</span>Perpetual inventory</button>
+  </div>
+
+  <!-- ===================== PERIODIC ===================== -->
+  <section class="panel" id="p-per" role="tabpanel" aria-labelledby="t-per">
+    <div class="card idea">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="8" y="6" width="28" height="34" rx="4" fill="none" stroke="var(--blue)" stroke-width="2.5"/><rect x="15" y="3" width="14" height="7" rx="2" fill="var(--blue)"/><path d="M14 20l4 4 8-8M14 31h16" stroke="var(--blue)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+      <div><h2>Count every R days, then order back up to a target level S</h2>
+      <p>Someone walks the shelf at fixed intervals, counts what is there and orders enough to bring stock up to <b>S</b>. Small retailers use this, and so do <b>vendor-managed</b> arrangements, where the supplier's rep checks and restocks. The catch: <b>between counts nobody is watching</b>.</p></div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="display:grid;gap:12px;min-width:0">
+        <div class="bar"><button id="perPlay">▶ Play</button><button class="ghost" id="perAll">Show all 56 days</button><button class="ghost" id="perReset">Restart</button></div>
+        <div class="svgbox"><svg class="chart" id="perSvg" viewBox="0 0 640 330" role="img" aria-label="Actual stock compared with the last counted stock over 56 days"></svg></div>
+        <div class="legend"><span><i style="background:var(--fill);opacity:.6"></i>actually on the shelf</span><span><i style="background:var(--blue)"></i>what the manager knows (last count)</span><span><i style="background:var(--marker)"></i>delivery</span><span><i style="background:var(--bad)"></i>stockout day</span></div>
+        <div class="event" id="perEvent"><span class="dot"></span><span>Press play to start the month.</span></div>
+      </div>
+      <div class="card controls">
+        <h3>Settings</h3>
+        <div class="field"><div class="row"><label for="perR">Count every R days</label><output id="perROut">7</output></div><input type="range" id="perR" min="2" max="14" value="7"></div>
+        <div class="field"><div class="row"><label for="perL">Supplier lead time L (days)</label><output id="perLOut">2</output></div><input type="range" id="perL" min="1" max="6" value="2"></div>
+        <div class="field"><div class="row"><label for="perS">Order up to S (units)</label><output id="perSOut">90</output></div><input type="range" id="perS" min="20" max="300" step="5" value="90"></div>
+        <p class="note">Average demand is 8 units a day, varying from day to day. S has to cover demand for <b>R + L</b> days: with R = <span id="perRL">7 + 2</span>, that's about <b id="perNeed">72</b> units plus a buffer.</p>
+        <div class="stats">
+          <div class="stat"><span class="lbl">Avg stock</span><span class="v" id="perAvg">–</span></div>
+          <div class="stat"><span class="lbl">Stockout days</span><span class="v" id="perSO">–</span></div>
+          <div class="stat"><span class="lbl">Days not counted</span><span class="v" id="perBlind">–</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><h3>What to notice</h3><ul class="notice">
+      <li>The blue line is <b>flat between counts</b>. The real stock keeps falling, but the record doesn't change until the next count.</li>
+      <li>Make R longer and you need a <b>bigger S</b> (more stock) to avoid red stockout days. That extra stock is the price of less control.</li>
+      <li>Try R = 14 with S = 90 and watch the shelf run empty before anyone notices.</li>
+    </ul></div>
+  </section>
+
+  <!-- ===================== TWO-BIN ===================== -->
+  <section class="panel" id="p-bin" role="tabpanel" aria-labelledby="t-bin" hidden>
+    <div class="card idea">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><path d="M4 16h16l-2 22H6z" fill="none" stroke="var(--marker)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 16h16l-2 22H26z" fill="var(--fill)" stroke="var(--fill)" stroke-width="2.5" stroke-linejoin="round"/><rect x="9" y="6" width="9" height="7" rx="1.5" fill="var(--marker)"/></svg>
+      <div><h2>Two containers: when the first one is empty, order</h2>
+      <p>Stock is split into two bins, and <b>each bin holds enough to cover demand during the lead time</b>. You use the first bin. When it is empty, that is your signal: send the order card and start on the second bin. The refill arrives before the second bin runs out. Nobody has to count anything.</p></div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="display:grid;gap:14px;min-width:0">
+        <div class="bar"><button id="binPlay">▶ Play</button><button class="ghost" id="binStep">+1 day</button><button class="ghost" id="binReset">Restart</button><span class="lbl" style="margin-left:auto">Day <b id="binDay" style="color:var(--ink)">0</b></span></div>
+        <div class="bins">
+          <div class="bin" id="binA"><div class="binhead"><h3>Bin A</h3><span class="tag" id="binATag">in use</span></div><div class="units" id="binAU"></div><div class="row"><span class="lbl">units</span><span class="binn" id="binAN">30</span></div></div>
+          <div class="bin" id="binB"><div class="binhead"><h3>Bin B</h3><span class="tag" id="binBTag">reserve</span></div><div class="units" id="binBU"></div><div class="row"><span class="lbl">units</span><span class="binn" id="binBN">30</span></div></div>
+        </div>
+        <div class="ordercard" id="orderCard">
+          <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect x="6" y="4" width="28" height="32" rx="3" fill="none" stroke="var(--marker)" stroke-width="2.5"/><path d="M12 14h16M12 21h16M12 28h9" stroke="var(--marker)" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <div style="display:grid;gap:6px"><div class="row"><b id="ocTitle">Order card: waiting in the bin</b><span class="lbl" id="ocEta"></span></div><div class="prog"><div id="ocProg"></div></div></div>
+        </div>
+        <div class="event" id="binEvent"><span class="dot"></span><span>Press play. Units are taken from the bin marked "in use".</span></div>
+      </div>
+      <div class="card controls">
+        <h3>Settings</h3>
+        <div class="field"><div class="row"><label for="binSize">Units per bin</label><output id="binSizeOut">30</output></div><input type="range" id="binSize" min="10" max="60" step="2" value="30"></div>
+        <div class="field"><div class="row"><label for="binD">Average demand (units/day)</label><output id="binDOut">6</output></div><input type="range" id="binD" min="2" max="10" value="6"></div>
+        <div class="field"><div class="row"><label for="binL">Lead time L (days)</label><output id="binLOut">4</output></div><input type="range" id="binL" min="1" max="8" value="4"></div>
+        <p class="note" id="binRule">Rule: each bin ≥ demand during lead time = d × L = <b>24</b>. Your bins hold 30, so they are safe.</p>
+        <div class="stats">
+          <div class="stat"><span class="lbl">Orders sent</span><span class="v" id="binOrders">0</span></div>
+          <div class="stat"><span class="lbl">Stockout days</span><span class="v" id="binSO">0</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><h3>What to notice</h3><ul class="notice">
+      <li>The <b>empty bin is the reorder signal</b>. It's a visual reorder point, with no counting and no computer.</li>
+      <li>Shrink the bins below d × L, or lengthen the lead time, and both bins empty before the delivery comes.</li>
+      <li>Common for cheap, fast-moving items: screws in a workshop, gloves in a clinic, Kanban bins on a line.</li>
+    </ul></div>
+  </section>
+
+  <!-- ===================== PERPETUAL ===================== -->
+  <section class="panel" id="p-pp" role="tabpanel" aria-labelledby="t-pp" hidden>
+    <div class="card idea">
+      <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="4" y="10" width="36" height="24" rx="3" fill="none" stroke="var(--fill)" stroke-width="2.5"/><path d="M10 15v14M14 15v14M17 15v14M22 15v14M25 15v14M30 15v14M34 15v14" stroke="var(--fill)" stroke-width="2"/></svg>
+      <div><h2>Every receipt and every sale updates the record, all the time</h2>
+      <p>A <b>bar code is scanned at receiving (+)</b> and <b>at the point of sale (−)</b>, so the record always shows current stock and the system can reorder by itself at the reorder point. But the record is only as good as its data. Theft, damage and mis-scans make it drift away from what is really on the shelf.</p></div>
+    </div>
+    <div class="grid2">
+      <div class="card" style="display:grid;gap:12px;min-width:0">
+        <div class="bar"><button id="ppPlay">▶ Play</button><button class="warn" id="ppCount">Cycle count now</button><button class="ghost" id="ppReset">Restart</button><span class="lbl" style="margin-left:auto">Day <b id="ppDay" style="color:var(--ink)">0</b></span></div>
+        <div class="meters">
+          <div class="meter"><span class="lbl">System record</span><span class="big" id="ppRec" style="color:var(--blue)">60</span></div>
+          <div class="meter"><span class="lbl">Really on shelf</span><span class="big" id="ppAct" style="color:var(--fill)">60</span></div>
+          <div class="gap"><span class="lbl">Record error</span><span class="big" id="ppGap">0</span></div>
+        </div>
+        <div class="svgbox"><svg class="chart" id="ppSvg" viewBox="0 0 640 260" role="img" aria-label="System record and actual stock over time"></svg></div>
+        <div class="legend"><span><i style="background:var(--blue)"></i>system record</span><span><i style="background:var(--fill)"></i>really on shelf</span><span><i style="background:var(--marker)"></i>ROP (auto-reorder)</span><span><i style="background:var(--bad)"></i>stockout</span></div>
+        <div class="event" id="ppEvent"><span class="dot"></span><span>Press play. Each day the scanners log sales and deliveries.</span></div>
+      </div>
+      <div class="card controls">
+        <h3>Settings</h3>
+        <label class="check"><input type="checkbox" id="ppErr" checked> Unrecorded losses (theft, damage, mis-scans)</label>
+        <div class="field"><div class="row"><label for="ppRate">Loss rate (% of daily sales)</label><output id="ppRateOut">15%</output></div><input type="range" id="ppRate" min="0" max="40" step="5" value="15"></div>
+        <label class="check"><input type="checkbox" id="ppAuto"> Automatic cycle count every 10 days</label>
+        <p class="note">Reorder point 30 units, order quantity 60, lead time 3 days, about 8 units sold a day.</p>
+        <div class="stats">
+          <div class="stat"><span class="lbl">Stockout days</span><span class="v" id="ppSO">0</span></div>
+          <div class="stat"><span class="lbl">Phantom stock days</span><span class="v" id="ppPh">0</span></div>
+        </div>
+        <h3 style="margin-top:4px">Scan log</h3>
+        <ul class="feed" id="ppFeed" aria-live="polite"></ul>
+      </div>
+    </div>
+    <div class="card"><h3>What to notice</h3><ul class="notice">
+      <li>With losses switched off, the two lines are identical. That is the promise of a perpetual system: <b>control at any moment</b>.</li>
+      <li>With losses on, the record says stock is there when the shelf is empty (<b>phantom stock</b>). The system doesn't reorder in time and customers find nothing.</li>
+      <li>Press <b>Cycle count now</b> to correct the record. Accurate records need regular counting, even in a perpetual system.</li>
+    </ul></div>
+  </section>
+
+  <section class="card" aria-labelledby="cmpH" style="display:grid;gap:10px">
+    <h2 id="cmpH">The three systems side by side</h2>
+    <div class="tablebox"><table>
+      <tr><th>System</th><th>How stock is known</th><th>When to order</th><th>Strength</th><th>Weakness</th></tr>
+      <tr><td><b>Periodic</b></td><td>Physical count every R days</td><td>At each count, up to S</td><td>Simple; suits small shops and vendor-managed inventory</td><td>No control between counts, so extra stock is needed</td></tr>
+      <tr><td><b>Two-bin</b></td><td>Look at the bins</td><td>When the first bin is empty</td><td>No counting, a visual signal</td><td>Only for simple items with steady demand</td></tr>
+      <tr><td><b>Perpetual</b></td><td>Every receipt and sale is recorded</td><td>When the record hits the ROP</td><td>Real-time control, automatic reordering</td><td>Needs scanning systems and accurate records (cycle counting)</td></tr>
+    </table></div>
+  </section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=()=>{const s=getComputedStyle(document.documentElement);return n=>s.getPropertyValue(n).trim();};
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function rng(seed){return()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0;while(!u)u=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*r());}
+const demandOf=(r,d)=>Math.max(0,Math.round(d+0.35*d*gauss(r)));
+function setEvent(el,kind,text){el.className="event "+kind;el.lastElementChild.textContent=text;}
+function niceStep(range,n){const raw=range/n,p=10**Math.floor(Math.log10(raw));return[1,2,5,10].map(m=>m*p).find(s=>s>=raw);}
+
+// ---------- tabs ----------
+const tabs=[["t-per","p-per"],["t-bin","p-bin"],["t-pp","p-pp"]];
+let stopAll=()=>{};
+tabs.forEach(([t,p])=>$(t).addEventListener("click",()=>{stopAll();tabs.forEach(([t2,p2])=>{$(t2).setAttribute("aria-selected",t2===t);$(p2).hidden=p2!==p;});}));
+document.querySelector(".tabs").addEventListener("keydown",e=>{const i=tabs.findIndex(([t])=>t===document.activeElement.id);if(i<0)return;
+  const j=e.key==="ArrowRight"?(i+1)%3:e.key==="ArrowLeft"?(i+2)%3:-1;if(j>=0){$(tabs[j][0]).focus();$(tabs[j][0]).click();}});
+
+// ===================== PERIODIC =====================
+const PER={R:7,L:2,S:90,d:8,N:56}; let perSim,perShown=0,perTimer=null;
+function perSimulate(){
+  const r=rng(42),{R,L,S,d,N}=PER; let I=S,known=S,pipe=[];const days=[];
+  for(let t=0;t<N;t++){
+    let arrived=0;pipe=pipe.filter(o=>{if(o.a===t){I+=o.q;arrived+=o.q;return false;}return true;});
+    let count=false,order=0;
+    if(t%R===0){count=true;known=I;const onOrder=pipe.reduce((s,o)=>s+o.q,0);order=Math.max(0,S-I-onOrder);if(order>0)pipe.push({a:t+L,q:order});}
+    const start=I,dem=demandOf(r,d),sold=Math.min(dem,I);I-=sold;
+    days.push({t,start,end:I,known,count,order,arrived,short:dem-sold});
+  }
+  return days;
+}
+function perDraw(){
+  const v=css(),svg=$("perSvg"),W=640,H=330,ML=44,MR=12,MT=26,MB=34,days=perSim.slice(0,perShown);
+  const ymax=Math.max(PER.S,...perSim.map(x=>x.start))*1.1, X=t=>ML+t/PER.N*(W-ML-MR), Y=y=>MT+(1-y/ymax)*(H-MT-MB);
+  let s="";const st=niceStep(ymax,5);
+  for(let y=0;y<=ymax;y+=st){s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(y)}" y2="${Y(y)}" stroke="${v("--line")}"/><text x="${ML-6}" y="${Y(y)+4}" text-anchor="end">${y}</text>`;}
+  for(let t=0;t<=PER.N;t+=7)s+=`<text x="${X(t)}" y="${H-MB+18}" text-anchor="middle">${t}</text>`;
+  s+=`<text x="${W-MR}" y="${H-2}" text-anchor="end">day</text>`;
+  // count day bands
+  perSim.forEach(x=>{if(x.count)s+=`<line x1="${X(x.t)}" x2="${X(x.t)}" y1="${MT-6}" y2="${H-MB}" stroke="${v("--blue")}" stroke-opacity=".25" stroke-dasharray="3 3"/>`;});
+  if(days.length){
+    // actual stock: within-day decline
+    let a=`M${X(0)},${Y(0)}`;days.forEach(x=>{a+=` L${X(x.t)},${Y(x.start)} L${X(x.t+1)},${Y(x.end)}`;});a+=` L${X(days.length)},${Y(0)} Z`;
+    s+=`<path d="${a}" fill="${v("--fill")}" fill-opacity=".45" stroke="${v("--fill")}" stroke-width="1.5"/>`;
+    let k="";days.forEach((x,i)=>{k+=(i?` L${X(x.t)},${Y(x.known)}`:`M${X(x.t)},${Y(x.known)}`)+` L${X(x.t+1)},${Y(x.known)}`;});
+    s+=`<path d="${k}" fill="none" stroke="${v("--blue")}" stroke-width="2.5"/>`;
+    days.forEach(x=>{
+      if(x.count)s+=`<circle cx="${X(x.t)}" cy="${Y(x.known)}" r="5" fill="${v("--blue")}" stroke="${v("--surface")}" stroke-width="2"/>`;
+      if(x.arrived)s+=`<path d="M${X(x.t)-6},${MT-14} L${X(x.t)+6},${MT-14} L${X(x.t)},${MT-5} Z" fill="${v("--marker")}"/>`;
+      if(x.short>0)s+=`<rect x="${X(x.t)}" y="${H-MB-8}" width="${X(1)-X(0)}" height="8" fill="${v("--bad")}"/>`;
+    });
+    const last=days[days.length-1];
+    if(!last.count&&last.end<last.known){const xx=X(last.t+1);
+      s+=`<line x1="${xx}" x2="${xx}" y1="${Y(last.known)}" y2="${Y(last.end)}" stroke="${v("--bad")}" stroke-width="1.5" stroke-dasharray="2 2"/>`;
+      s+=`<text x="${xx+6}" y="${(Y(last.known)+Y(last.end))/2+4}" style="fill:${v("--bad")}">unseen: ${last.known-last.end}</text>`;}
+  }
+  s+=`<text x="${W-MR}" y="12" text-anchor="end">● count day · ▼ delivery</text>`;
+  svg.innerHTML=s;
+  const shown=days.length?days:perSim;
+  $("perAvg").textContent=days.length?Math.round(shown.reduce((s,x)=>s+(x.start+x.end)/2,0)/shown.length):"–";
+  const so=days.filter(x=>x.short>0).length;$("perSO").textContent=days.length?so:"–";$("perSO").className="v "+(so?"bad":"good");
+  $("perBlind").textContent=days.length?days.filter(x=>!x.count).length+" / "+days.length:"–";
+}
+function perEventFor(x){
+  if(x.short>0)return["so",`Day ${x.t}: shelf ran empty, ${x.short} customers left without the product.`];
+  if(x.count)return["cnt",`Day ${x.t}: count! ${x.known} on the shelf. Ordered ${x.order} to bring stock up to S = ${PER.S}.`];
+  if(x.arrived)return["arr",`Day ${x.t}: delivery of ${x.arrived} units arrived.`];
+  return["",`Day ${x.t}: no count today. The record still says ${x.known}, but the shelf holds ${x.end}.`];
+}
+function perStep(){if(perShown>=PER.N){perStop();return;}perShown++;perDraw();const[k,t]=perEventFor(perSim[perShown-1]);setEvent($("perEvent"),k,t);}
+function perStop(){clearInterval(perTimer);perTimer=null;$("perPlay").textContent="▶ Play";}
+$("perPlay").addEventListener("click",()=>{if(perTimer){perStop();return;}if(perShown>=PER.N)perShown=0;$("perPlay").textContent="❚❚ Pause";perTimer=setInterval(perStep,reduce?60:380);});
+$("perAll").addEventListener("click",()=>{perStop();perShown=PER.N;perDraw();setEvent($("perEvent"),"","Whole period shown. Change R or S to compare.");});
+$("perReset").addEventListener("click",()=>{perStop();perShown=0;perDraw();setEvent($("perEvent"),"","Press play to start the month.");});
+function perParams(){PER.R=+$("perR").value;PER.L=+$("perL").value;PER.S=+$("perS").value;
+  $("perROut").textContent=PER.R;$("perLOut").textContent=PER.L;$("perSOut").textContent=PER.S;
+  $("perRL").textContent=`${PER.R} + ${PER.L}`;$("perNeed").textContent=PER.d*(PER.R+PER.L);
+  perSim=perSimulate();if(perShown===0&&!perTimer){}perDraw();}
+["perR","perL","perS"].forEach(id=>$(id).addEventListener("input",()=>{perParams();if(!perTimer&&perShown>0){const[k,t]=perEventFor(perSim[perShown-1]);setEvent($("perEvent"),k,t);}}));
+
+// ===================== TWO-BIN =====================
+const BIN={B:30,d:6,L:4}; let bs,binTimer=null;
+function binReset(){bs={day:0,bins:[BIN.B,BIN.B],active:0,order:null,orders:0,so:0,r:rng(7)};binRender();setEvent($("binEvent"),"","Press play. Units are taken from the bin marked \"in use\".");}
+function binStepDay(){
+  bs.day++;let msg=null,kind="";
+  if(bs.order&&bs.order.arrive<=bs.day){const i=bs.order.bin;bs.bins[i]=BIN.B;bs.order=null;msg=`Day ${bs.day}: delivery arrived. Bin ${"AB"[i]} refilled to ${BIN.B} and put back as the reserve.`;kind="arr";}
+  let dem=demandOf(bs.r,BIN.d),short=0;
+  while(dem>0){
+    const a=bs.active;
+    if(bs.bins[a]>0){const take=Math.min(dem,bs.bins[a]);bs.bins[a]-=take;dem-=take;}
+    if(bs.bins[a]===0){
+      const o=1-a;
+      if(!bs.order){bs.order={bin:a,arrive:bs.day+BIN.L,sent:bs.day};bs.orders++;msg=`Day ${bs.day}: Bin ${"AB"[a]} is empty, so the order card goes to the supplier. Now using Bin ${"AB"[o]}.`;kind="ord";}
+      if(bs.bins[o]>0){bs.active=o;continue;}
+      short=dem;dem=0;
+    }
+  }
+  if(short>0){bs.so++;msg=`Day ${bs.day}: both bins empty! ${short} units of demand could not be met. The bins are too small for this lead time.`;kind="so";}
+  if(!msg)msg=`Day ${bs.day}: used units from Bin ${"AB"[bs.active]}.`+(bs.order?` Order arrives day ${bs.order.arrive}.`:"");
+  setEvent($("binEvent"),kind,msg);binRender();
+}
+function binRender(){
+  $("binDay").textContent=bs.day;
+  ["A","B"].forEach((n,i)=>{const el=$("bin"+n),u=$("bin"+n+"U"),c=bs.bins[i];
+    el.classList.toggle("active",bs.active===i&&c>0);el.classList.toggle("empty",c===0);
+    $("bin"+n+"N").textContent=c;
+    $("bin"+n+"Tag").textContent=c===0?(bs.order&&bs.order.bin===i?"empty, refill ordered":"empty"):(bs.active===i?"in use":"reserve");
+    if(u.children.length!==BIN.B){u.innerHTML="";for(let k=0;k<BIN.B;k++){const d=document.createElement("div");d.className="u";u.appendChild(d);}}
+    [...u.children].forEach((d,k)=>d.classList.toggle("gone",k>=c));
+  });
+  const o=bs.order;$("orderCard").classList.toggle("sent",!!o);
+  $("ocTitle").textContent=o?`Order card sent on day ${o.sent} (refill for Bin ${"AB"[o.bin]})`:"Order card: waiting in the bin";
+  $("ocEta").textContent=o?`arrives day ${o.arrive}`:"";
+  $("ocProg").style.width=o?Math.min(100,(bs.day-o.sent)/BIN.L*100)+"%":"0%";
+  $("binOrders").textContent=bs.orders;$("binSO").textContent=bs.so;$("binSO").className="v "+(bs.so?"bad":"good");
+}
+function binRule(){const need=BIN.d*BIN.L,ok=BIN.B>=need*1.15,tight=BIN.B>=need;
+  $("binRule").innerHTML=`Rule: each bin ≥ demand during lead time = d × L = <b>${need}</b>. Your bins hold ${BIN.B}, so they are `+(ok?`<b style="color:var(--good)">safe</b>.`:tight?`<b style="color:var(--marker)">just enough</b> (a busy day can still cause a stockout).`:`<b style="color:var(--bad)">too small</b>, so expect stockouts.`);}
+function binStop(){clearInterval(binTimer);binTimer=null;$("binPlay").textContent="▶ Play";}
+$("binPlay").addEventListener("click",()=>{if(binTimer){binStop();return;}$("binPlay").textContent="❚❚ Pause";binTimer=setInterval(binStepDay,reduce?120:700);});
+$("binStep").addEventListener("click",()=>{binStop();binStepDay();});
+$("binReset").addEventListener("click",()=>{binStop();binReset();});
+[["binSize","B"],["binD","d"],["binL","L"]].forEach(([id,k])=>$(id).addEventListener("input",e=>{BIN[k]=+e.target.value;$(id+"Out").textContent=BIN[k];binRule();binStop();binReset();}));
+
+// ===================== PERPETUAL =====================
+const PP={ROP:30,Q:60,L:3,d:8}; let ps,ppTimer=null;
+function ppReset(){ps={day:0,rec:60,act:60,order:null,hist:[{t:0,rec:60,act:60,so:false}],so:0,ph:0,r:rng(99)};$("ppFeed").innerHTML="";ppRender();setEvent($("ppEvent"),"","Press play. Each day the scanners log sales and deliveries.");}
+function feed(day,txt,cls,val){const li=document.createElement("li");li.innerHTML=`<span>Day ${day}</span><span>${txt}</span><span class="${cls}">${val}</span>`;$("ppFeed").prepend(li);while($("ppFeed").children.length>40)$("ppFeed").lastChild.remove();}
+function ppCount(auto){const diff=ps.act-ps.rec;ps.rec=ps.act;feed(ps.day,auto?"Scheduled cycle count":"Cycle count: record set to shelf","c",(diff>0?"+":"")+diff);
+  setEvent($("ppEvent"),"cnt",`Day ${ps.day}: cycle count found ${ps.act} on the shelf. Record corrected by ${diff}.`);ppCheckReorder();ppRender();}
+function ppCheckReorder(){if(!ps.order&&ps.rec<=PP.ROP){ps.order={arrive:ps.day+PP.L};feed(ps.day,`Record ≤ ROP: auto-order ${PP.Q}`,"c","PO");return true;}return false;}
+function ppStepDay(){
+  ps.day++;let kind="",msg=`Day ${ps.day}: sales scanned at the register.`;
+  if(ps.order&&ps.order.arrive<=ps.day){ps.rec+=PP.Q;ps.act+=PP.Q;ps.order=null;feed(ps.day,"Received, scanned at dock","p","+"+PP.Q);msg=`Day ${ps.day}: delivery scanned at receiving, +${PP.Q} to both record and shelf.`;kind="arr";}
+  const dem=demandOf(ps.r,PP.d),sold=Math.min(dem,ps.act),short=dem-sold;
+  ps.act-=sold;ps.rec-=sold;if(sold)feed(ps.day,"POS scans","m","−"+sold);
+  if($("ppErr").checked){const rate=+$("ppRate").value/100;let lost=0;for(let k=0;k<PP.d;k++)if(ps.r()<rate)lost++;lost=Math.min(lost,ps.act);
+    if(lost){ps.act-=lost;feed(ps.day,"Unrecorded loss (not scanned)","x","−"+lost);}}
+  let soToday=false;
+  if(short>0){ps.so++;soToday=true;kind="so";msg=ps.rec>0?`Day ${ps.day}: STOCKOUT. The record says ${ps.rec} in stock, but the shelf is empty: phantom stock.`:`Day ${ps.day}: stockout, ${short} units of demand lost.`;}
+  if(ps.act===0&&ps.rec>0)ps.ph++;
+  if(ppCheckReorder()){kind=kind||"ord";if(!soToday)msg=`Day ${ps.day}: the record hit the ROP (${PP.ROP}), so the system placed an order automatically.`;}
+  ps.hist.push({t:ps.day,rec:ps.rec,act:ps.act,so:soToday});
+  setEvent($("ppEvent"),kind,msg);
+  if($("ppAuto").checked&&ps.day%10===0)ppCount(true);
+  ppRender();
+}
+function ppRender(){
+  $("ppDay").textContent=ps.day;$("ppRec").textContent=ps.rec;$("ppAct").textContent=ps.act;
+  const g=ps.rec-ps.act;$("ppGap").textContent=g?(g>0?"+":"")+g:"0";$("ppGap").style.color=g?"var(--bad)":"var(--good)";
+  $("ppSO").textContent=ps.so;$("ppSO").className="v "+(ps.so?"bad":"good");$("ppPh").textContent=ps.ph;$("ppPh").className="v "+(ps.ph?"bad":"good");
+  const v=css(),W=640,H=260,ML=40,MR=12,MT=14,MB=30,win=40,x0=Math.max(0,ps.day-win),h=ps.hist.filter(p=>p.t>=x0);
+  const ymax=Math.max(100,...h.map(p=>Math.max(p.rec,p.act)))*1.1,X=t=>ML+(t-x0)/win*(W-ML-MR),Y=y=>MT+(1-Math.max(0,y)/ymax)*(H-MT-MB);
+  let s="";const st=niceStep(ymax,5);
+  for(let y=0;y<=ymax;y+=st)s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(y)}" y2="${Y(y)}" stroke="${v("--line")}"/><text x="${ML-6}" y="${Y(y)+4}" text-anchor="end">${y}</text>`;
+  for(let t=Math.ceil(x0/5)*5;t<=x0+win;t+=5)s+=`<text x="${X(t)}" y="${H-MB+18}" text-anchor="middle">${t}</text>`;
+  s+=`<line x1="${ML}" x2="${W-MR}" y1="${Y(PP.ROP)}" y2="${Y(PP.ROP)}" stroke="${v("--marker")}" stroke-dasharray="6 4" stroke-width="1.5"/><text x="${W-MR-4}" y="${Y(PP.ROP)-5}" text-anchor="end" style="fill:${v("--marker")}">ROP ${PP.ROP}</text>`;
+  if(h.length>1){
+    const path=k=>h.map((p,i)=>(i?"L":"M")+X(p.t).toFixed(1)+","+Y(p[k]).toFixed(1)).join(" ");
+    let gap="M"+h.map(p=>X(p.t).toFixed(1)+","+Y(p.rec).toFixed(1)).join(" L")+" L"+h.slice().reverse().map(p=>X(p.t).toFixed(1)+","+Y(p.act).toFixed(1)).join(" L")+" Z";
+    s+=`<path d="${gap}" fill="${v("--bad")}" fill-opacity=".14"/>`;
+    s+=`<path d="${path("act")}" fill="none" stroke="${v("--fill")}" stroke-width="3"/>`;
+    s+=`<path d="${path("rec")}" fill="none" stroke="${v("--blue")}" stroke-width="2" stroke-dasharray="5 3"/>`;
+    h.forEach(p=>{if(p.so)s+=`<rect x="${X(p.t)-4}" y="${H-MB-8}" width="8" height="8" fill="${v("--bad")}"/>`;});
+  }
+  $("ppSvg").innerHTML=s;
+}
+function ppStop(){clearInterval(ppTimer);ppTimer=null;$("ppPlay").textContent="▶ Play";}
+$("ppPlay").addEventListener("click",()=>{if(ppTimer){ppStop();return;}$("ppPlay").textContent="❚❚ Pause";ppTimer=setInterval(ppStepDay,reduce?120:650);});
+$("ppCount").addEventListener("click",()=>ppCount(false));
+$("ppReset").addEventListener("click",()=>{ppStop();ppReset();});
+$("ppRate").addEventListener("input",e=>$("ppRateOut").textContent=e.target.value+"%");
+
+stopAll=()=>{perStop();binStop();ppStop();};
+const redraw=()=>{perDraw();ppRender();};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+perParams();binRule();binReset();ppReset();
+</script>
+</body>
+</html>

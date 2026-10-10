@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Newsvendor Service Level</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: lesson strip on top, full-width chart, control deck below split into controls + quiz */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --fill:#2a9474; --fill-soft:rgba(42,148,116,.22); --curve:#18232d; --marker:#d9622b;
+  --good:#2f8a57; --bad:#c2412d; --opt:#6a4fb3;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --fill-soft:rgba(76,197,158,.25); --curve:#e6ecf1; --marker:#f08a52;
+  --good:#5cc58a; --bad:#ef7a66; --opt:#b49cf0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --fill:#4cc59e; --fill-soft:rgba(76,197,158,.25); --curve:#e6ecf1; --marker:#f08a52;
+  --good:#5cc58a; --bad:#ef7a66; --opt:#b49cf0; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding-inline:20px;padding-block:28px 40px;display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
+h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+.lede b{color:var(--ink)}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 10px 6px;overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:340px}
+svg text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.readout{display:flex;flex-wrap:wrap;gap:10px 28px;align-items:baseline;padding:4px 6px 0}
+.big{font:700 clamp(30px,6vw,46px)/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--fill)}
+.lbl{font:600 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat{display:grid;gap:4px}
+.stat .v{font:600 22px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.deck{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+@media (max-width:760px){.deck{grid-template-columns:1fr}}
+.panel{display:grid;gap:16px;align-content:start;min-width:0}
+h2{font:600 18px/1.2 var(--f-display);margin:0}
+.field{display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row output{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--marker)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input[type=number]{width:100%;font:500 15px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--marker);outline-offset:2px}
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.quiz p{margin:0}
+.ans{display:flex;gap:8px;flex-wrap:wrap}
+.ans input{flex:1 1 120px}
+button{font:600 14px var(--f-body);padding:9px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:hover{opacity:.88}
+.fb{min-height:1.4em;font-weight:500}
+.fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+.score{font:500 12px var(--f-mono);color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0;max-width:68ch}
+.note code{font-family:var(--f-mono);color:var(--ink)}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px 26px}
+.concepts>div{min-width:0;border-top:2px solid var(--fill);padding-top:10px}
+.concepts h3{font:600 17px/1.25 var(--f-display);margin:0 0 6px}
+.concepts p{margin:0;font-size:14.5px}
+.concepts code,.cost code{font-family:var(--f-mono);font-size:13px}
+.cost{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:16px;min-width:0}
+.cost .sub{margin:0;color:var(--muted);max-width:68ch}
+.costs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.split{display:grid;grid-template-columns:1fr 1.2fr;gap:22px;align-items:start}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+dl.calc{display:grid;grid-template-columns:1fr auto;gap:8px 14px;margin:0;font-size:14px}
+dl.calc dt{color:var(--muted)} dl.calc dd{margin:0;font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.hl{color:var(--opt)!important;font-weight:700}
+.compare{display:grid;gap:12px;justify-items:start;min-width:0;overflow-x:auto}
+table{border-collapse:collapse;font-size:14px;width:100%}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;color:var(--muted);font-family:var(--f-body)}
+td{font-family:var(--f-mono)} th{font-weight:600}
+#costErr:empty{display:none}
+.pbox{overflow-x:auto}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Single-period inventory model</span>
+    <h1>How much stock covers the day?</h1>
+    <p class="lede">The curve is the probability distribution of a vendor's total daily demand. The shaded area is the <b>service level</b>: the probability that demand is less than or equal to <b>Q</b>, the stock he starts the day with. Drag Q and watch the area change.</p>
+  </header>
+
+  <section class="concepts" aria-label="Key concepts">
+    <div>
+      <h3>Single-period inventory model</h3>
+      <p>Also called the <b>newsvendor problem</b>. You order once, before demand is known, for one selling period: newspapers, fresh bakery goods, seasonal fashion, event merchandise. Leftover units are sold off at a salvage value or thrown away, and unmet demand is lost. The only decision is <b>Q</b>, how many units to stock.</p>
+    </div>
+    <div>
+      <h3>Service level</h3>
+      <p>The probability that demand during the period does not exceed Q, so no customer is turned away: <code>SL = P(D ≤ Q)</code>. Raising Q raises the service level but leaves more unsold stock on average. For normal demand, <code>Q = μ + z·σ</code>, and <code>z·σ</code> is the <b>safety stock</b>.</p>
+    </div>
+    <div>
+      <h3>Choosing Q with costs</h3>
+      <p>Each unit short costs <b>Cu</b> (lost margin plus any goodwill loss). Each unit left over costs <b>Co</b> (purchase cost minus salvage). The best Q sets the service level equal to the <b>critical ratio</b> <code>Cu / (Cu + Co)</code>, which balances the two risks.</p>
+    </div>
+  </section>
+
+  <section class="chart" aria-label="Demand distribution chart">
+    <svg id="plot" viewBox="0 0 900 340" role="img" aria-labelledby="plotDesc"><desc id="plotDesc">Normal demand curve with the area left of Q shaded.</desc></svg>
+    <div class="readout">
+      <div class="stat"><span class="lbl">Service level</span><span class="big" id="slBig">93.3%</span></div>
+      <div class="stat"><span class="lbl">Stock Q</span><span class="v" id="qVal">95</span></div>
+      <div class="stat"><span class="lbl">z-score</span><span class="v" id="zVal">1.50</span></div>
+      <div class="stat"><span class="lbl">Stockout risk</span><span class="v" id="soVal">6.7%</span></div>
+    </div>
+  </section>
+
+  <div class="deck">
+    <section class="panel" aria-labelledby="ctlH">
+      <h2 id="ctlH">Model settings</h2>
+      <div class="field">
+        <div class="row"><label for="q">Initial stock level, Q (units)</label><output id="qOut" for="q">95</output></div>
+        <input type="range" id="q" min="40" max="120" step="1" value="95">
+      </div>
+      <div class="pair">
+        <div class="field"><label for="mu">Mean demand, μ</label><input type="number" id="mu" value="80" step="1"></div>
+        <div class="field"><label for="sd">Std. deviation, σ</label><input type="number" id="sd" value="10" min="1" step="1"></div>
+      </div>
+      <div class="field">
+        <div class="row"><label for="target">Or set a target service level</label><output id="tOut" for="target">93%</output></div>
+        <input type="range" id="target" min="1" max="99" step="1" value="93">
+      </div>
+      <p class="note">Service level = Φ((Q − μ) / σ). Working backwards, Q = μ + z·σ, where z is the standard normal value for the target probability. In Excel: <code>=NORM.DIST(Q, μ, σ, TRUE)</code> and <code>=NORM.INV(SL, μ, σ)</code>.</p>
+    </section>
+
+    <section class="panel quiz" aria-labelledby="quizH">
+      <div class="row"><h2 id="quizH">Check your understanding</h2><span class="score" id="score">0 / 0</span></div>
+      <p id="qText"></p>
+      <div class="ans">
+        <input type="number" id="ans" aria-label="Your answer" placeholder="Your answer">
+        <button id="check">Check</button>
+      </div>
+      <p class="fb" id="fb" aria-live="polite"></p>
+      <div class="ans">
+        <button class="ghost" id="show">Show solution</button>
+        <button class="ghost" id="next">New question</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="cost" aria-labelledby="costH">
+    <div style="display:grid;gap:4px">
+      <h2 id="costH">Find the optimal Q from costs</h2>
+      <p class="sub">Enter the unit economics. The optimal stock level Q* makes the service level equal to the critical ratio. The chart below shows expected profit for every Q, with its peak at Q*.</p>
+    </div>
+    <div class="costs">
+      <div class="field"><label for="price">Selling price, p</label><input id="price" type="number" step="0.01" min="0" value="12"></div>
+      <div class="field"><label for="cost">Purchase cost, c</label><input id="cost" type="number" step="0.01" min="0" value="5"></div>
+      <div class="field"><label for="salv">Salvage value, v</label><input id="salv" type="number" step="0.01" min="0" value="1"></div>
+      <div class="field"><label for="good">Goodwill cost per unit short, g</label><input id="good" type="number" step="0.01" min="0" value="0"></div>
+    </div>
+    <p class="fb no" id="costErr"></p>
+    <div class="split">
+      <dl class="calc">
+        <dt>Underage cost Cu = p − c + g</dt><dd id="cu"></dd>
+        <dt>Overage cost Co = c − v</dt><dd id="co"></dd>
+        <dt>Critical ratio Cu / (Cu + Co)</dt><dd id="cr"></dd>
+        <dt>z* = Φ⁻¹(critical ratio)</dt><dd id="zs"></dd>
+        <dt>Optimal Q* = μ + z*·σ</dt><dd id="qs" class="hl"></dd>
+      </dl>
+      <div class="compare">
+        <table>
+          <thead><tr><th></th><th>At Q* = <span id="qsH"></span></th><th>At your Q = <span id="qH"></span></th></tr></thead>
+          <tbody>
+            <tr><td>Service level</td><td id="t_sl1"></td><td id="t_sl2"></td></tr>
+            <tr><td>Expected units sold</td><td id="t_s1"></td><td id="t_s2"></td></tr>
+            <tr><td>Expected leftover</td><td id="t_i1"></td><td id="t_i2"></td></tr>
+            <tr><td>Expected units short</td><td id="t_l1"></td><td id="t_l2"></td></tr>
+            <tr><td>Expected profit</td><td id="t_p1" class="hl"></td><td id="t_p2"></td></tr>
+          </tbody>
+        </table>
+        <button type="button" id="useQs">Set Q to Q*</button>
+      </div>
+    </div>
+    <div class="pbox"><svg id="pchart" viewBox="0 0 900 250" role="img" aria-label="Expected profit as a function of Q"></svg></div>
+    <p class="note">Expected units short L(Q) = σ·[φ(z) − z(1 − Φ(z))]. Expected sales = μ − L. Expected leftover = Q − sales. Expected profit = p·sales + v·leftover − c·Q − g·L. In Excel, Q* is <code>=NORM.INV(Cu/(Cu+Co), μ, σ)</code>.</p>
+  </section>
+</div>
+
+<script>
+// --- math ---
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+function invPhi(p){const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239],
+ b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572],
+ c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],
+ d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416],pl=0.02425;let q,r;
+ if(p<pl){q=Math.sqrt(-2*Math.log(p));return(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+ if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+ q=p-0.5;r=q*q;return(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+const pdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+
+// --- state ---
+const $=id=>document.getElementById(id);
+let mu=80, sd=10, Q=95;
+const W=900,H=340,L=40,R=20,T=24,B=40;
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+const svg=$("plot");
+
+function niceStep(range){const raw=range/8;const p=10**Math.floor(Math.log10(raw));return [1,2,5,10].map(m=>m*p).find(s=>s>=raw);}
+
+function draw(){
+  [...svg.querySelectorAll(":not(desc)")].forEach(n=>n.remove());
+  const xmin=mu-4*sd,xmax=mu+4*sd, ymax=pdf(mu,mu,sd)*1.12;
+  const X=x=>L+(x-xmin)/(xmax-xmin)*(W-L-R), Y=y=>H-B-y/ymax*(H-B-T);
+  const css=getComputedStyle(document.documentElement), v=n=>css.getPropertyValue(n).trim();
+  // grid + ticks
+  const step=niceStep(xmax-xmin);
+  for(let t=Math.ceil(xmin/step)*step;t<=xmax+1e-9;t+=step){
+    el("line",{x1:X(t),x2:X(t),y1:T,y2:H-B,stroke:v("--line"),"stroke-width":1});
+    const tx=el("text",{x:X(t),y:H-B+20,"text-anchor":"middle"});tx.textContent=+t.toFixed(2);
+  }
+  el("line",{x1:L,x2:W-R,y1:H-B,y2:H-B,stroke:v("--muted"),"stroke-width":1});
+  const xl=el("text",{x:W-R,y:H-4,"text-anchor":"end"});xl.textContent="daily demand (units)";
+  // shaded area
+  const qc=Math.min(Math.max(Q,xmin),xmax);
+  let d=`M${X(xmin)},${Y(0)}`;
+  for(let i=0;i<=200;i++){const x=xmin+(qc-xmin)*i/200;d+=` L${X(x).toFixed(1)},${Y(pdf(x,mu,sd)).toFixed(1)}`;}
+  d+=` L${X(qc)},${Y(0)} Z`;
+  el("path",{d,fill:v("--fill"),"fill-opacity":.85});
+  // curve
+  let c="";for(let i=0;i<=300;i++){const x=xmin+(xmax-xmin)*i/300;c+=(i?" L":"M")+X(x).toFixed(1)+","+Y(pdf(x,mu,sd)).toFixed(1);}
+  el("path",{d:c,fill:"none",stroke:v("--curve"),"stroke-width":2});
+  // mean & sigma annotations
+  const yTop=Y(pdf(mu,mu,sd));
+  el("line",{x1:X(mu),x2:X(mu),y1:yTop,y2:H-B,stroke:v("--curve"),"stroke-width":1,"stroke-dasharray":"4 4"});
+  const sy=Y(pdf(mu+sd,mu,sd));
+  el("line",{x1:X(mu),x2:X(mu+sd),y1:sy,y2:sy,stroke:v("--curve"),"stroke-width":1.2});
+  el("path",{d:`M${X(mu+sd)-6},${sy-4} L${X(mu+sd)},${sy} L${X(mu+sd)-6},${sy+4}`,fill:"none",stroke:v("--curve"),"stroke-width":1.2});
+  const st=el("text",{x:(X(mu)+X(mu+sd))/2,y:sy-8,"text-anchor":"middle"});st.textContent=`σ = ${sd}`;st.style.fill=v("--ink");
+  const mt=el("text",{x:X(mu)+6,y:H-B-10});mt.textContent=`μ = ${mu}`;mt.style.fill=v("--ink");
+  // optimal Q* marker
+  if(cm&&cm.qs>=xmin&&cm.qs<=xmax){
+    el("line",{x1:X(cm.qs),x2:X(cm.qs),y1:T+10,y2:H-B,stroke:v("--opt"),"stroke-width":1.6,"stroke-dasharray":"5 4"});
+    const ot=el("text",{x:X(cm.qs)+(cm.qs<Q?-6:6),y:T+30,"text-anchor":cm.qs<Q?"end":"start","font-weight":600});ot.textContent="Q*";ot.style.fill=v("--opt");
+  }
+  // Q marker
+  if(Q>=xmin&&Q<=xmax){
+    el("line",{x1:X(Q),x2:X(Q),y1:T,y2:H-B,stroke:v("--marker"),"stroke-width":2});
+    const g=el("g",{});
+    el("rect",{x:X(Q)-24,y:T-18,width:48,height:20,rx:10,fill:v("--marker")},g);
+    const qt=el("text",{x:X(Q),y:T-4,"text-anchor":"middle","font-weight":600},g);qt.textContent="Q "+fmtQ(Q);qt.style.fill="#fff";
+  }
+}
+const fmtQ=q=>Number.isInteger(q)?q:q.toFixed(1);
+
+function update(fromTarget){
+  const z=(Q-mu)/sd, sl=Phi(z);
+  $("slBig").textContent=(sl*100).toFixed(1)+"%";
+  $("qVal").textContent=fmtQ(Q); $("qOut").textContent=fmtQ(Q);
+  $("zVal").textContent=z.toFixed(2);
+  $("soVal").textContent=((1-sl)*100).toFixed(1)+"%";
+  if(!fromTarget){const t=Math.min(99,Math.max(1,Math.round(sl*100)));$("target").value=t;$("tOut").textContent=t+"%";}
+  computeCosts();
+  draw();
+  drawProfit();
+}
+function syncRange(){
+  const q=$("q");q.min=Math.floor(mu-4*sd);q.max=Math.ceil(mu+4*sd);q.step=sd<5?0.1:1;
+  Q=Math.min(Math.max(Q,+q.min),+q.max);q.value=Q;
+}
+$("q").addEventListener("input",e=>{Q=+e.target.value;update();});
+$("target").addEventListener("input",e=>{const p=+e.target.value/100;$("tOut").textContent=e.target.value+"%";
+  Q=Math.round((mu+invPhi(p)*sd)*10)/10;if(sd>=5)Q=Math.round(Q);$("q").value=Q;update(true);});
+function readParams(){const m=parseFloat($("mu").value),s=parseFloat($("sd").value);
+  if(isFinite(m))mu=m; if(isFinite(s)&&s>0)sd=s; syncRange();update();newQuestion();}
+$("mu").addEventListener("change",readParams);$("sd").addEventListener("change",readParams);
+
+// --- quiz ---
+let cur=null,right=0,tries=0;
+function newQuestion(){
+  const kind=Math.random()<0.6?"Q":"SL";
+  if(kind==="Q"){const p=[5,10,15,20,25,30,35,40,45,54,60,65,70,75,80,85,90,95,97,98,99][Math.floor(Math.random()*21)];
+    const ans=mu+invPhi(p/100)*sd;
+    cur={kind,ans,tol:Math.max(0.6,sd*0.03),sol:`z = NORM.S.INV(${p/100}) = ${invPhi(p/100).toFixed(3)}, so Q = ${mu} + ${invPhi(p/100).toFixed(3)} × ${sd} = ${ans.toFixed(2)} ≈ ${Math.round(ans)} units.`,
+      text:`If the vendor wants a service level of <b>${p}%</b>, what should his initial stock level be each morning? (units, rounded)`};
+  }else{const q=Math.round(mu+(Math.random()*5-2.5)*sd);const z=(q-mu)/sd,ans=Phi(z)*100;
+    cur={kind,ans,tol:0.6,sol:`z = (${q} − ${mu}) / ${sd} = ${z.toFixed(2)}, and Φ(${z.toFixed(2)}) = ${ans.toFixed(1)}%.`,
+      text:`If the vendor starts the day with <b>${q} units</b>, what service level does he provide? (percent, one decimal)`};}
+  $("qText").innerHTML=cur.text;$("ans").value="";$("fb").textContent="";$("fb").className="fb";cur.done=false;
+}
+$("check").addEventListener("click",()=>{
+  const a=parseFloat($("ans").value);if(!isFinite(a)){$("fb").textContent="Enter a number first.";$("fb").className="fb no";return;}
+  const ok=Math.abs(a-cur.ans)<=cur.tol;
+  if(!cur.done){tries++;if(ok)right++;cur.done=ok;}
+  $("score").textContent=`${right} / ${tries}`;
+  $("fb").textContent=ok?"Correct. Drag the sliders to see it on the curve.":(a<cur.ans?"Too low. Try again.":"Too high. Try again.");
+  $("fb").className="fb "+(ok?"ok":"no");
+});
+$("ans").addEventListener("keydown",e=>{if(e.key==="Enter")$("check").click();});
+$("show").addEventListener("click",()=>{$("fb").textContent=cur.sol;$("fb").className="fb";cur.done=true;});
+$("next").addEventListener("click",newQuestion);
+
+// --- cost model ---
+const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
+const pct=p=>(p*100).toFixed(1)+"%";
+let cm=null;
+const money=x=>(x<0?"−":"")+Math.abs(x).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+function metrics(q){const z=(q-mu)/sd,Ls=sd*(phi(z)-z*(1-Phi(z))),S=mu-Ls,I=q-S;
+  return {sl:Phi(z),L:Ls,S,I,P:cm.p*S+cm.v*I-cm.c*q-cm.g*Ls};}
+function computeCosts(){
+  const p=parseFloat($("price").value),c=parseFloat($("cost").value),sv=parseFloat($("salv").value),g=parseFloat($("good").value)||0;
+  const cu=p-c+g,co=c-sv;let msg="";
+  if([p,c,sv].some(x=>!isFinite(x)))msg="Fill in price, cost and salvage value.";
+  else if(co<=0)msg="Salvage value must be below the purchase cost, otherwise you would stock without limit.";
+  else if(cu<=0)msg="Price plus goodwill cost must exceed the purchase cost, otherwise stocking nothing is best.";
+  $("costErr").textContent=msg;
+  const ids=["cu","co","cr","zs","qs","qsH","qH","t_sl1","t_sl2","t_s1","t_s2","t_i1","t_i2","t_l1","t_l2","t_p1","t_p2"];
+  if(msg){cm=null;ids.forEach(id=>$(id).textContent="—");return;}
+  const cr=cu/(cu+co),zs=invPhi(cr),qs=mu+zs*sd;
+  cm={p,c,v:sv,g,cu,co,cr,zs,qs};
+  $("cu").textContent=money(cu);$("co").textContent=money(co);$("cr").textContent=cr.toFixed(3)+" ("+pct(cr)+")";
+  $("zs").textContent=zs.toFixed(3);$("qs").textContent=qs.toFixed(1)+" units";
+  $("qsH").textContent=qs.toFixed(1);$("qH").textContent=fmtQ(Q);
+  const a=metrics(qs),b=metrics(Q);
+  [["sl",x=>pct(x.sl)],["s",x=>x.S.toFixed(1)],["i",x=>x.I.toFixed(1)],["l",x=>x.L.toFixed(2)],["p",x=>money(x.P)]]
+    .forEach(([k,f])=>{$("t_"+k+"1").textContent=f(a);$("t_"+k+"2").textContent=f(b);});
+}
+const ps=$("pchart");
+function drawProfit(){
+  ps.textContent="";
+  const pe=(t,a)=>el(t,a,ps);
+  const css=getComputedStyle(document.documentElement), v=n=>css.getPropertyValue(n).trim();
+  if(!cm){const t=pe("text",{x:450,y:125,"text-anchor":"middle"});t.textContent="Enter valid costs to see expected profit";return;}
+  const xmin=mu-4*sd,xmax=mu+4*sd,PW=900,pL=56,pR=20,pT=24,pB=210;
+  const X=x=>pL+(x-xmin)/(xmax-xmin)*(PW-pL-pR);
+  const pts=[];for(let i=0;i<=200;i++){const q=xmin+(xmax-xmin)*i/200;pts.push([q,metrics(q).P]);}
+  let lo=Math.min(...pts.map(p=>p[1])),hi=Math.max(...pts.map(p=>p[1]));
+  if(lo>0)lo=0;if(hi<=lo)hi=lo+1;
+  const Y=y=>pB-(y-lo)/(hi-lo)*(pB-pT);
+  const ys=niceStep((hi-lo)*1.6);
+  for(let y=Math.ceil(lo/ys)*ys;y<=hi+1e-9;y+=ys){
+    pe("line",{x1:pL,x2:PW-pR,y1:Y(y),y2:Y(y),stroke:v(Math.abs(y)<1e-9?"--muted":"--line"),"stroke-width":1});
+    const t=pe("text",{x:pL-6,y:Y(y)+4,"text-anchor":"end"});t.textContent=+y.toFixed(2);}
+  const step=niceStep(xmax-xmin);
+  for(let t=Math.ceil(xmin/step)*step;t<=xmax+1e-9;t+=step){const tx=pe("text",{x:X(t),y:pB+20,"text-anchor":"middle"});tx.textContent=+t.toFixed(2);}
+  const yl=pe("text",{x:pL,y:pT-8});yl.textContent="expected profit per day";
+  const xl=pe("text",{x:PW-pR,y:pB+38,"text-anchor":"end"});xl.textContent="stock level Q (units)";
+  pe("path",{d:"M"+pts.map(p=>`${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" L"),fill:"none",stroke:v("--curve"),"stroke-width":2});
+  const mq=metrics(cm.qs).P,mc=metrics(Q).P;
+  if(cm.qs>=xmin&&cm.qs<=xmax){
+    pe("line",{x1:X(cm.qs),x2:X(cm.qs),y1:Y(mq),y2:pB,stroke:v("--opt"),"stroke-dasharray":"4 4"});
+    pe("circle",{cx:X(cm.qs),cy:Y(mq),r:5,fill:v("--opt")});
+    const t=pe("text",{x:X(cm.qs),y:Y(mq)-10,"text-anchor":"middle","font-weight":600});t.textContent=`Q* ≈ ${cm.qs.toFixed(1)}`;t.style.fill=v("--opt");}
+  if(Q>=xmin&&Q<=xmax)pe("circle",{cx:X(Q),cy:Y(mc),r:5,fill:v("--marker"),stroke:v("--surface"),"stroke-width":2});
+}
+["price","cost","salv","good"].forEach(id=>$(id).addEventListener("input",()=>update()));
+$("useQs").addEventListener("click",()=>{if(!cm)return;Q=sd>=5?Math.round(cm.qs):Math.round(cm.qs*10)/10;syncRange();update();});
+const redraw=()=>{draw();drawProfit();};
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+syncRange();update();newQuestion();
+</script>
+
+</body>
+</html>

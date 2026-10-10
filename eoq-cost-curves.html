@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EOQ Cost Curves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same visual system as the Newsvendor and Inventory Replenishment pages */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --hold:#2a9474; --order:#6a5acd; --total:#18232d; --marker:#d9622b;
+  --good:#2f8a57; --bad:#c2412d;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --hold:#4cc59e; --order:#a99cf5; --total:#e6ecf1; --marker:#f08a52;
+  --good:#5cc58a; --bad:#ef7a66; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --hold:#4cc59e; --order:#a99cf5; --total:#e6ecf1; --marker:#f08a52;
+  --good:#5cc58a; --bad:#ef7a66; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 40px;display:grid;gap:22px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
+h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:72ch;margin:0}
+.lede b{color:var(--ink)}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 10px 10px;display:grid;gap:10px;min-width:0}
+.svgbox{overflow-x:auto}
+svg{display:block;width:100%;height:auto;min-width:560px;touch-action:none;user-select:none}
+svg text{font-family:var(--f-mono);font-size:12px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:0 6px;font:500 13px var(--f-mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 6px}
+.hint{font:500 12px var(--f-mono);color:var(--muted)}
+.readout{display:flex;flex-wrap:wrap;gap:12px 30px;align-items:baseline;padding:4px 6px 0}
+.big{font:700 clamp(30px,6vw,44px)/1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--marker)}
+.lbl{font:600 11px/1.2 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.stat{display:grid;gap:4px}
+.stat .v{font:600 22px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.stat .f{font:400 11px var(--f-mono);color:var(--muted)}
+table{border-collapse:collapse;width:100%;font:500 14px var(--f-mono);font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+td .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:-1px}
+tr.tot td{font-weight:600;border-bottom:none}
+.gap.up{color:var(--bad)} .gap.zero{color:var(--good)}
+.deck{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+@media (max-width:760px){.deck{grid-template-columns:1fr}}
+.panel{display:grid;gap:16px;align-content:start;min-width:0}
+h2{font:600 18px/1.2 var(--f-display);margin:0}
+.field{display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.row output{font:600 14px var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--marker)}
+input[type=number]{width:100%;font:500 15px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--marker);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;color:var(--muted);padding:6px 12px;font:600 12px var(--f-mono)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.quiz p{margin:0}
+.ans{display:flex;gap:8px;flex-wrap:wrap}
+.ans input{flex:1 1 120px}
+button{font:600 14px var(--f-body);padding:9px 16px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--surface);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button:hover{opacity:.88}
+.fb{min-height:1.4em;font-weight:500}
+.fb.ok{color:var(--good)} .fb.no{color:var(--bad)}
+.score{font:500 12px var(--f-mono);color:var(--muted)}
+.note{font-size:13px;color:var(--muted);margin:0;max-width:72ch}
+.note b{color:var(--ink)}
+.note code{font-family:var(--f-mono);color:var(--ink)}
+.sub{font:600 11px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.hidden{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Economic order quantity · cost trade-off</span>
+    <h1>How much should we order each time?</h1>
+    <p class="lede">Ordering in large batches means few orders but a lot of stock sitting on the shelf. Ordering in small batches keeps stock low but means many orders. The <b>EOQ</b> is the order size where the two costs balance and <b>total annual cost</b> is lowest. Drag the orange line, or change the inputs and watch the curves move.</p>
+  </header>
+
+  <section class="chart" aria-label="Annual cost curves against order quantity">
+    <div class="legend" aria-hidden="true">
+      <span><i style="border-color:var(--hold)"></i>Holding cost (Q/2)·H</span>
+      <span><i style="border-color:var(--order)"></i>Ordering cost (D/Q)·S</span>
+      <span><i style="border-color:var(--total);border-top-width:4px"></i>Total cost</span>
+      <span id="lgPin" class="hidden"><i style="border-color:var(--muted);border-top-style:dashed"></i>Pinned for comparison</span>
+    </div>
+    <div class="svgbox"><svg id="plot" viewBox="0 0 900 430" role="img" aria-labelledby="plotDesc"><desc id="plotDesc">Holding cost rises in a straight line with order quantity, ordering cost falls as a curve, and total cost is U-shaped with its minimum at the EOQ, where holding and ordering cost are equal.</desc></svg></div>
+    <div class="bar">
+      <button id="toEoq">Set Q = EOQ</button>
+      <button class="ghost" id="pin">Pin curves</button>
+      <button class="ghost hidden" id="unpin">Clear pin</button>
+      <button class="ghost" id="fit">Fit axes</button>
+      <span class="hint">Axes stay fixed so you can see the curves shift. Press Fit axes to rescale.</span>
+    </div>
+    <div class="readout">
+      <div class="stat"><span class="lbl">EOQ, Q*</span><span class="big" id="eoqBig">200</span><span class="f">√(2DS / H)</span></div>
+      <div class="stat"><span class="lbl">Minimum total cost</span><span class="v" id="tcMin">100</span><span class="f">√(2DSH)</span></div>
+      <div class="stat"><span class="lbl">Orders per year at Q*</span><span class="v" id="nV">5.0</span><span class="f">D / Q*</span></div>
+      <div class="stat"><span class="lbl">Time between orders</span><span class="v" id="tV">73 d</span><span class="f" id="tF">working days / N</span></div>
+    </div>
+  </section>
+
+  <div class="deck">
+    <section class="panel" aria-labelledby="ctlH">
+      <h2 id="ctlH">Model inputs</h2>
+      <div class="field">
+        <div class="row"><label for="D">Annual demand, D (units/year)</label><output id="DOut" for="D">1,000</output></div>
+        <input type="range" id="D" min="100" max="5000" step="100" value="1000">
+      </div>
+      <div class="field">
+        <div class="row"><label for="S">Ordering (setup) cost, S ($/order)</label><output id="SOut" for="S">$10</output></div>
+        <input type="range" id="S" min="1" max="100" step="1" value="10">
+      </div>
+      <div class="field">
+        <div class="row"><span class="lbl">Holding cost entered as</span>
+          <span class="seg" role="group" aria-label="Holding cost mode"><button id="mH" aria-pressed="true">H directly</button><button id="mI" aria-pressed="false">i × C</button></span></div>
+      </div>
+      <div class="field" id="fH">
+        <div class="row"><label for="H">Holding cost, H ($/unit/year)</label><output id="HOut" for="H">$0.50</output></div>
+        <input type="range" id="H" min="0.1" max="5" step="0.05" value="0.5">
+      </div>
+      <div class="field hidden" id="fI">
+        <div class="row"><label for="I">Carrying rate, i (% of unit cost per year)</label><output id="IOut" for="I">20%</output></div>
+        <input type="range" id="I" min="5" max="50" step="1" value="20">
+      </div>
+      <div class="field hidden" id="fC">
+        <div class="row"><label for="C">Unit cost, C ($/unit)</label><output id="COut" for="C">$2.50</output></div>
+        <input type="range" id="C" min="0.5" max="20" step="0.5" value="2.5">
+      </div>
+      <div class="sub">Your order quantity</div>
+      <div class="field">
+        <div class="row"><label for="Q">Order quantity, Q (units)</label><output id="QOut" for="Q">300</output></div>
+        <input type="range" id="Q" min="10" max="1000" step="1" value="300">
+      </div>
+      <div class="field">
+        <div class="row"><label for="WD">Working days per year</label><output id="WDOut" for="WD">365</output></div>
+        <input type="range" id="WD" min="200" max="365" step="1" value="365">
+      </div>
+
+      <table aria-label="Annual costs at your Q compared with the EOQ">
+        <thead><tr><th>Annual cost</th><th>At your Q</th><th>At EOQ</th><th>Difference</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sw" style="background:var(--hold)"></span>Holding</td><td id="hQ"></td><td id="hE"></td><td id="hD"></td></tr>
+          <tr><td><span class="sw" style="background:var(--order)"></span>Ordering</td><td id="oQ"></td><td id="oE"></td><td id="oD"></td></tr>
+          <tr class="tot"><td><span class="sw" style="background:var(--total)"></span>Total</td><td id="tQ"></td><td id="tE"></td><td id="tD" class="gap"></td></tr>
+        </tbody>
+      </table>
+      <p class="note" id="story"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="whyH">
+      <h2 id="whyH">What to notice</h2>
+      <p class="note"><b>The balance point.</b> The EOQ sits exactly where the holding and ordering lines cross. Setting <code>(Q/2)·H = (D/Q)·S</code> and solving for Q gives <code>Q* = √(2DS/H)</code>.</p>
+      <p class="note"><b>Which way does it move?</b> Raise D or S and the ordering curve lifts, so Q* moves right (order more, less often). Raise H and the holding line gets steeper, so Q* moves left (order less, more often). Press <b>Pin curves</b> first to keep the old picture for comparison.</p>
+      <p class="note"><b>Square-root effect.</b> Doubling demand does not double the EOQ. It grows by √2, about 41%.</p>
+      <p class="note"><b>The flat bottom.</b> Total cost is forgiving near Q*: <code>TC(Q)/TC* = ½(Q/Q* + Q*/Q)</code>. Ordering 50% too much costs only about 8% extra. Ordering far too little is much more expensive than ordering a bit too much.</p>
+
+      <div class="quiz panel" aria-labelledby="quizH">
+        <div class="row"><h2 id="quizH">Check your understanding</h2><span class="score" id="score">0 / 0</span></div>
+        <p id="qText"></p>
+        <div class="ans">
+          <input type="number" id="ans" aria-label="Your answer" placeholder="Your answer" step="any">
+          <button id="check">Check</button>
+        </div>
+        <p class="fb" id="fb" aria-live="polite"></p>
+        <div class="ans">
+          <button class="ghost" id="show">Show solution</button>
+          <button class="ghost" id="next">New question</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const NS="http://www.w3.org/2000/svg";
+const P={D:1000,S:10,H:0.5,I:20,C:2.5,mode:"H",Q:300,WD:365};
+const fmt=(x,n=0)=>(Math.round(x*10**n)/10**n).toLocaleString("en-US",{minimumFractionDigits:n,maximumFractionDigits:n});
+const money=(x,n)=>{n=n??(Math.abs(x)<100?2:0);return (x<0?"−$":"$")+fmt(Math.abs(x),n);};
+const Hval=()=>P.mode==="H"?P.H:P.I/100*P.C;
+const EOQ=()=>Math.sqrt(2*P.D*P.S/Hval());
+const hold=Q=>Q/2*Hval(), ord=Q=>P.D/Q*P.S, tc=Q=>hold(Q)+ord(Q);
+
+// ---- chart geometry ----
+const W=900,Ht=430,m={l:74,r:24,t:18,b:48};
+const pw=W-m.l-m.r, ph=Ht-m.t-m.b;
+let X={max:600}, Y={max:200}, pinned=null;
+function niceStep(range,target){const raw=range/target,p=10**Math.floor(Math.log10(raw)),f=raw/p;return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p;}
+function fitAxes(){
+  const q=EOQ();
+  X.max=niceCeil(q*3);
+  Y.max=niceCeil(tc(q)*2.2);
+  syncQRange();
+}
+function niceCeil(v){const s=niceStep(v,5);return Math.ceil(v/s)*s;}
+function syncQRange(){
+  const q=$("Q");q.max=Math.max(20,Math.round(X.max));q.step=X.max>2000?5:1;
+  if(P.Q>X.max){P.Q=Math.round(X.max);}
+  q.value=P.Q;
+}
+const sx=Q=>m.l+Q/X.max*pw, sy=c=>m.t+ph-c/Y.max*ph;
+const invx=px=>(px-m.l)/pw*X.max;
+
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
+function pathFor(f){
+  // sample, clipping vertically at the top of the plot
+  let d="",pen=false;const n=320,ymaxDraw=Y.max*1.02;
+  for(let i=0;i<=n;i++){
+    const Q=Math.max(X.max*1e-3,i/n*X.max), c=f(Q);
+    if(c>ymaxDraw||!isFinite(c)){pen=false;continue;}
+    d+=(pen?"L":"M")+sx(Q).toFixed(1)+" "+sy(c).toFixed(1);pen=true;
+  }
+  return d;
+}
+const svg=$("plot");
+function draw(){
+  svg.querySelectorAll(":scope > :not(desc)").forEach(n=>n.remove());
+  const q=EOQ(), Hh=Hval();
+  // clip region
+  const defs=el("defs",{});const cp=el("clipPath",{id:"clip"},defs);el("rect",{x:m.l,y:m.t-2,width:pw,height:ph+2},cp);
+  // grid + axes
+  const xs=niceStep(X.max,8), ys=niceStep(Y.max,6);
+  for(let v=0;v<=Y.max+1e-9;v+=ys){
+    el("line",{x1:m.l,x2:m.l+pw,y1:sy(v),y2:sy(v),stroke:"var(--line)","stroke-width":1});
+    const t=el("text",{x:m.l-8,y:sy(v)+4,"text-anchor":"end"});t.textContent=money(v,ys<1?2:0);
+  }
+  for(let v=0;v<=X.max+1e-9;v+=xs){
+    el("line",{x1:sx(v),x2:sx(v),y1:m.t+ph,y2:m.t+ph+5,stroke:"var(--muted)"});
+    const t=el("text",{x:sx(v),y:m.t+ph+20,"text-anchor":"middle"});t.textContent=fmt(v);
+  }
+  el("line",{x1:m.l,x2:m.l+pw,y1:m.t+ph,y2:m.t+ph,stroke:"var(--muted)"});
+  el("line",{x1:m.l,x2:m.l,y1:m.t,y2:m.t+ph,stroke:"var(--muted)"});
+  let t=el("text",{x:m.l+pw/2,y:Ht-6,"text-anchor":"middle"});t.textContent="Order quantity, Q (units)";
+  t=el("text",{x:16,y:m.t+ph/2,"text-anchor":"middle",transform:`rotate(-90 16 ${m.t+ph/2})`});t.textContent="Annual cost ($/year)";
+
+  const g=el("g",{"clip-path":"url(#clip)"});
+  // pinned snapshot
+  if(pinned){
+    const ph_=Q=>Q/2*pinned.H, po=Q=>pinned.D/Q*pinned.S, pt=Q=>ph_(Q)+po(Q);
+    for(const [f,c] of [[ph_,"var(--hold)"],[po,"var(--order)"],[pt,"var(--total)"]])
+      el("path",{d:pathFor(f),fill:"none",stroke:c,"stroke-width":1.6,"stroke-dasharray":"5 5",opacity:.5},g);
+    const pq=Math.sqrt(2*pinned.D*pinned.S/pinned.H);
+    if(pq<=X.max){el("circle",{cx:sx(pq),cy:sy(pt(pq)),r:4,fill:"none",stroke:"var(--muted)","stroke-width":1.5},g);
+      const lt=el("text",{x:sx(pq),y:sy(pt(pq))+18,"text-anchor":"middle"},g);lt.textContent="old Q* "+fmt(pq);}
+  }
+  // EOQ guide
+  if(q<=X.max){
+    el("line",{x1:sx(q),x2:sx(q),y1:m.t,y2:m.t+ph,stroke:"var(--muted)","stroke-dasharray":"3 4"},g);
+  }
+  // curves
+  el("path",{d:pathFor(hold),fill:"none",stroke:"var(--hold)","stroke-width":2.5},g);
+  el("path",{d:pathFor(ord),fill:"none",stroke:"var(--order)","stroke-width":2.5},g);
+  el("path",{d:pathFor(tc),fill:"none",stroke:"var(--total)","stroke-width":3.5},g);
+  // EOQ points
+  if(q<=X.max){
+    el("circle",{cx:sx(q),cy:sy(hold(q)),r:5,fill:"var(--surface)",stroke:"var(--ink)","stroke-width":2},g);
+    if(tc(q)<=Y.max){
+      el("circle",{cx:sx(q),cy:sy(tc(q)),r:6,fill:"var(--ink)"},g);
+      const near=Math.abs(sx(P.Q)-sx(q))<150;
+      const lab=el("text",{x:sx(q)+(near?0:10),y:sy(tc(q))+(near?24:-10),"text-anchor":near?"middle":"start","font-weight":600,style:"fill:var(--ink)"},g);
+      lab.textContent="Minimum TC "+money(tc(q));
+    }
+    const ql=el("text",{x:sx(q),y:m.t+12,"text-anchor":"middle","font-weight":600,style:"fill:var(--ink)"},g);ql.textContent="Q* = "+fmt(q);
+    const cl=el("text",{x:sx(q)+10,y:sy(hold(q))+30,style:"fill:var(--muted)"},g);cl.textContent="holding = ordering";
+  }else{
+    const off=el("text",{x:m.l+pw-6,y:m.t+14,"text-anchor":"end","font-weight":600,style:"fill:var(--ink)"},g);off.textContent="Q* = "+fmt(q)+" is off the chart → Fit axes";
+  }
+  // current Q (draggable)
+  const Q=P.Q, x=sx(Q);
+  const qg=el("g",{id:"qline",style:"cursor:ew-resize"});
+  el("rect",{x:x-14,y:m.t,width:28,height:ph,fill:"transparent"},qg);
+  el("line",{x1:x,x2:x,y1:m.t,y2:m.t+ph,stroke:"var(--marker)","stroke-width":2.5},qg);
+  for(const [f,c] of [[hold,"var(--hold)"],[ord,"var(--order)"],[tc,"var(--total)"]]){
+    const v=f(Q); if(v<=Y.max) el("circle",{cx:x,cy:sy(v),r:5.5,fill:c,stroke:"var(--surface)","stroke-width":2},qg);
+  }
+  // gap bracket between TC(Q) and TC*
+  const gap=tc(Q)-tc(q);
+  if(gap>Y.max*0.01&&tc(Q)<=Y.max){
+    el("line",{x1:x,x2:x,y1:sy(tc(q)),y2:sy(tc(Q)),stroke:"var(--bad)","stroke-width":5,opacity:.55},qg);
+    el("line",{x1:Math.min(sx(q),x),x2:Math.max(sx(q),x),y1:sy(tc(q)),y2:sy(tc(q)),stroke:"var(--bad)","stroke-dasharray":"2 3",opacity:.7},qg);
+  }
+  const right=x>m.l+pw-130;
+  const tag=el("text",{x:right?x-8:x+8,y:m.t+ph-10,"text-anchor":right?"end":"start","font-weight":600,style:"fill:var(--marker)"},qg);
+  tag.textContent="Q = "+fmt(Q);
+  const tag2=el("text",{x:right?x-8:x+8,y:Math.max(m.t+30,Math.min(m.t+ph-28,sy(Math.min(tc(Q),Y.max))-12)),"text-anchor":right?"end":"start","font-weight":600,style:"fill:var(--marker)"},qg);
+  tag2.textContent="TC "+money(tc(Q));
+}
+
+// ---- readouts ----
+function update(){
+  const q=EOQ(), Q=P.Q, Hh=Hval();
+  $("DOut").textContent=fmt(P.D);
+  $("SOut").textContent=money(P.S);
+  $("HOut").textContent=money(P.H,2);
+  $("IOut").textContent=P.I+"%";
+  $("COut").textContent=money(P.C,2);
+  $("QOut").textContent=fmt(Q);
+  $("WDOut").textContent=P.WD;
+  $("eoqBig").textContent=fmt(q,q<100?1:0);
+  $("tcMin").textContent=money(tc(q));
+  const N=P.D/q;
+  $("nV").textContent=fmt(N,1);
+  $("tV").textContent=fmt(P.WD/N,1)+" d";
+  $("tF").textContent=P.WD+" days / N";
+  const cells=[["h",hold],["o",ord],["t",tc]];
+  for(const [k,f] of cells){
+    $(k+"Q").textContent=money(f(Q)); $(k+"E").textContent=money(f(q));
+    const d=f(Q)-f(q); $(k+"D").textContent=(d>=0?"+":"")+money(d);
+  }
+  const pct=(tc(Q)/tc(q)-1)*100, td=$("tD");
+  td.className="gap "+(pct<0.05?"zero":"up");
+  td.textContent=pct<0.05?"at minimum":"+"+money(tc(Q)-tc(q))+" (+"+fmt(pct,1)+"%)";
+  let s;
+  if(Math.abs(Q-q)/q<0.02) s="Your Q is at the EOQ: holding and ordering cost are equal, and total cost is as low as it gets.";
+  else if(Q>q) s=`Your Q is ${fmt(Q/q*100-100)}% above the EOQ. You order less often (${fmt(P.D/Q,1)} times a year), but carry more stock, so <b>holding cost dominates</b>.`;
+  else s=`Your Q is ${fmt(100-Q/q*100)}% below the EOQ. You keep little stock, but place ${fmt(P.D/Q,1)} orders a year, so <b>ordering cost dominates</b>.`;
+  if(P.mode==="I") s+=` Here H = i × C = ${P.I}% × ${money(P.C,2)} = ${money(Hh,2)} per unit per year.`;
+  $("story").innerHTML=s;
+  draw();
+}
+
+// ---- inputs ----
+for(const k of ["D","S","H","I","C","Q","WD"]){
+  $(k).addEventListener("input",e=>{P[k]=+e.target.value; if(k!=="Q"&&k!=="WD") autoExpand(); update();});
+}
+function autoExpand(){ // keep the EOQ on the chart if it runs off
+  const q=EOQ(); if(q>X.max*0.92){X.max=niceCeil(q*1.6);syncQRange();}
+}
+function setMode(mo){
+  P.mode=mo;
+  $("mH").setAttribute("aria-pressed",mo==="H");$("mI").setAttribute("aria-pressed",mo==="I");
+  $("fH").classList.toggle("hidden",mo!=="H");$("fI").classList.toggle("hidden",mo!=="I");$("fC").classList.toggle("hidden",mo!=="I");
+  autoExpand();update();
+}
+$("mH").onclick=()=>setMode("H"); $("mI").onclick=()=>setMode("I");
+$("toEoq").onclick=()=>{P.Q=Math.round(EOQ());if(P.Q>X.max){X.max=niceCeil(P.Q*1.6);syncQRange();}$("Q").value=P.Q;update();};
+$("fit").onclick=()=>{fitAxes();update();};
+$("pin").onclick=()=>{pinned={D:P.D,S:P.S,H:Hval()};$("unpin").classList.remove("hidden");$("lgPin").classList.remove("hidden");$("pin").textContent="Re-pin curves";update();};
+$("unpin").onclick=()=>{pinned=null;$("unpin").classList.add("hidden");$("lgPin").classList.add("hidden");$("pin").textContent="Pin curves";update();};
+
+// drag the Q line anywhere on the plot
+let dragging=false;
+function svgX(ev){const r=svg.getBoundingClientRect();return (ev.clientX-r.left)/r.width*W;}
+function setQFromEvent(ev){let Q=Math.round(invx(svgX(ev)));Q=Math.max(+$("Q").min,Math.min(X.max,Q));P.Q=Q;$("Q").value=Q;update();}
+svg.addEventListener("pointerdown",ev=>{const px=svgX(ev);if(px<m.l||px>m.l+pw)return;dragging=true;svg.setPointerCapture(ev.pointerId);setQFromEvent(ev);});
+svg.addEventListener("pointermove",ev=>{if(dragging)setQFromEvent(ev);});
+svg.addEventListener("pointerup",()=>dragging=false);
+svg.addEventListener("pointercancel",()=>dragging=false);
+
+// ---- quiz ----
+let score=0,tries=0,cur=null;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function newQ(){
+  const D=pick([600,800,1000,1200,1500,2000,2400,3000,3600,4800,6000]);
+  const S=pick([10,12,15,20,25,30,40,50,60,75]);
+  const H=pick([0.5,0.75,1,1.2,1.5,2,2.5,3,4,5]);
+  const q=Math.sqrt(2*D*S/H), T=Math.sqrt(2*D*S*H);
+  const k=pick([0.5,1.5,2]);
+  const kinds=[
+    {t:`Annual demand is ${fmt(D)} units, ordering cost is $${S} per order and holding cost is $${H.toFixed(2)} per unit per year. What is the EOQ (units)?`,a:q,tol:0.01,sol:`Q* = √(2DS/H) = √(2 × ${fmt(D)} × ${S} / ${H.toFixed(2)}) = ${fmt(q,1)} units.`},
+    {t:`D = ${fmt(D)} units/year, S = $${S}/order, H = $${H.toFixed(2)}/unit/year. What is the minimum total annual cost (holding + ordering) at the EOQ?`,a:T,tol:0.01,sol:`At Q* = ${fmt(q,1)}, holding = ordering = ${money(T/2)}. Total = √(2DSH) = ${money(T)}.`},
+    {t:`D = ${fmt(D)} units/year, S = $${S}/order, H = $${H.toFixed(2)}/unit/year. How many orders per year are placed at the EOQ?`,a:D/q,tol:0.02,sol:`Q* = ${fmt(q,1)}, so N = D / Q* = ${fmt(D)} / ${fmt(q,1)} = ${fmt(D/q,2)} orders per year.`},
+    {t:`D = ${fmt(D)} units/year, S = $${S}/order, H = $${H.toFixed(2)}/unit/year. A manager orders Q = ${fmt(k*q)} units (${k} × EOQ). What is the total annual cost?`,a:k*q/2*H+D/(k*q)*S,tol:0.01,sol:`Holding = (${fmt(k*q)}/2) × ${H.toFixed(2)} = ${money(k*q/2*H)}; ordering = (${fmt(D)}/${fmt(k*q)}) × ${S} = ${money(D/(k*q)*S)}. Total = ${money(k*q/2*H+D/(k*q)*S)}, which is ${fmt((0.5*(k+1/k)-1)*100,1)}% above the minimum ${money(T)}.`},
+    {t:`If annual demand doubles while S and H stay the same, by what factor does the EOQ change? (e.g. 1.5)`,a:Math.SQRT2,tol:0.01,sol:`Q* is proportional to √D, so it grows by √2 ≈ 1.414. Test it: pin the curves, then double D.`},
+  ];
+  cur=pick(kinds);
+  $("qText").textContent=cur.t;$("ans").value="";$("fb").textContent="";$("fb").className="fb";
+}
+$("check").onclick=()=>{
+  const v=parseFloat($("ans").value); if(isNaN(v))return;
+  tries++; const ok=Math.abs(v-cur.a)<=Math.max(cur.tol*Math.abs(cur.a),0.5*(cur.a>10?1:0.01));
+  if(ok)score++;
+  $("fb").className="fb "+(ok?"ok":"no");
+  $("fb").textContent=ok?"Correct. "+cur.sol:"Not quite. Try again, or show the solution.";
+  $("score").textContent=score+" / "+tries;
+};
+$("ans").addEventListener("keydown",e=>{if(e.key==="Enter")$("check").click();});
+$("show").onclick=()=>{$("fb").className="fb";$("fb").textContent=cur.sol;};
+$("next").onclick=newQ;
+
+fitAxes(); P.Q=300; $("Q").value=300; update(); newQ();
+</script>
+</body>
+</html>
