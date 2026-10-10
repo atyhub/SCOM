@@ -42,7 +42,9 @@ a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tag.live{color:var(--live)} .tag.soon{color:var(--soon)}
 .card.soon{opacity:.62}
 .go{font:600 13px var(--f-mono);color:var(--accent)}
-footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px}
+footer p{margin:0;max-width:75ch}
+footer b{color:var(--ink);font-weight:600}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -56,7 +58,10 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
 
   <div id="topics"></div>
 
-  <footer>Materials for MSB255 students. Textbook references are to Heizer, Render &amp; Munson, <i>Operations Management</i>.</footer>
+  <footer>
+    <p>These simulations are designed to complement the MSB255 course materials. For full explanations and worked examples, please refer to the recommended textbook and other course resources.</p>
+    <p>Designed and developed by <b>Ali Türkyılmaz</b>, University of Stavanger, with AI assistance (Claude).</p>
+  </footer>
 </div>
 
 <script>
@@ -68,7 +73,6 @@ footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);paddin
 const TOPICS = [
   {
     title: "Inventory Management",
-    meta: "Week 42 · Heizer Ch. 12",
     items: [
       { title: "Inventory Record Systems", text: "ABC analysis, record accuracy and cycle counting.",                               file: "inventory-record-systems.html", live: true },
       { title: "EOQ Cost Curves",          text: "Holding, ordering and total cost against order quantity. See why the EOQ is robust.", file: "eoq-cost-curves.html",       live: true },
@@ -81,7 +85,7 @@ const TOPICS = [
 const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 document.getElementById("topics").innerHTML = TOPICS.map(t => `
   <section>
-    <div class="topic-head"><h2>${esc(t.title)}</h2><span class="meta">${esc(t.meta)}</span></div>
+    <div class="topic-head"><h2>${esc(t.title)}</h2>${t.meta ? `<span class="meta">${esc(t.meta)}</span>` : ""}</div>
     <div class="grid">
       ${t.items.map(i => i.live
         ? `<a class="card" href="${esc(i.file)}"><span class="tag live">Open</span><h3>${esc(i.title)}</h3><p>${esc(i.text)}</p><span class="go">Launch →</span></a>`
