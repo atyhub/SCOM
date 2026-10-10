@@ -29,7 +29,8 @@ body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0
 .wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 40px;display:grid;gap:22px}
 header{display:grid;gap:6px}
 
-.sim-nav{display:flex}.sim-nav a{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none}.sim-nav a:hover{color:var(--marker)}.sim-nav-end{justify-content:center;padding-top:8px;border-top:1px solid var(--line)}
+.sim-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent,var(--marker))}.fs-btn[hidden]{display:none}
+.sim-nav a{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none}.sim-nav a:hover{color:var(--marker)}.sim-nav-end{justify-content:center;padding-top:8px;border-top:1px solid var(--line)}
 .guide-link{font:600 13px/1 var(--f-body);color:var(--marker);text-decoration:none;border:1.5px solid var(--marker);border-radius:999px;padding:7px 12px;white-space:nowrap}
 .guide-link:hover{background:var(--marker);color:#fff}
 .headrow{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
@@ -87,7 +88,7 @@ button:hover{opacity:.88}
 <body>
 
 <div class="wrap">
-  <nav class="sim-nav" aria-label="Site"><a href="index.html">← All simulations</a></nav>
+  <nav class="sim-nav" aria-label="Site"><a href="index.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
   <header>
     <div class="headrow"><span class="eyebrow">Continuous review · fixed order quantity</span><a class="guide-link" href="inventory-replenishment-guide.html">Guide: theory &amp; how to use →</a></div>
     <h1>When should we reorder?</h1>
@@ -378,6 +379,12 @@ $("next").addEventListener("click",newQuestion);
 
 reset(); if(reduce){advance(WIN);draw();}
 newQuestion();
+</script>
+<script>
+(()=>{const b=document.querySelectorAll(".fs-btn");if(!document.fullscreenEnabled){return;}
+const upd=()=>b.forEach(x=>x.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
+b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{}));});
+document.addEventListener("fullscreenchange",upd);upd();})();
 </script>
 </body>
 </html>
