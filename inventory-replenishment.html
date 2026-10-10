@@ -89,7 +89,7 @@ button:hover{opacity:.88}
 <body>
 
 <div class="wrap">
-  <nav class="sim-nav" aria-label="Site"><a href="index.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
+  <nav class="sim-nav" aria-label="Site"><a href="home.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
   <header>
     <div class="headrow"><span class="eyebrow">Continuous review · fixed order quantity</span><a class="guide-link" href="inventory-replenishment-guide.html">Guide: theory &amp; how to use →</a></div>
     <h1>When should we reorder?</h1>
@@ -162,7 +162,7 @@ button:hover{opacity:.88}
       </div>
     </section>
   </div>
-  <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="index.html">← All simulations</a></nav>
+  <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="home.html">← All simulations</a></nav>
 </div>
 
 <script>
@@ -382,10 +382,11 @@ reset(); if(reduce){advance(WIN);draw();}
 newQuestion();
 </script>
 <script>
-(()=>{const b=document.querySelectorAll(".fs-btn");if(!document.fullscreenEnabled){return;}
-const upd=()=>b.forEach(x=>x.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
-b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{}));});
-document.addEventListener("fullscreenchange",upd);upd();})();
+(()=>{let d=document;try{if(parent!==window&&parent.__scomShell)d=parent.document}catch(e){}
+const b=document.querySelectorAll(".fs-btn");if(!d.fullscreenEnabled){return;}
+const upd=()=>b.forEach(x=>x.textContent=d.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
+b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen().catch(()=>{}));});
+d.addEventListener("fullscreenchange",upd);addEventListener("pagehide",()=>d.removeEventListener("fullscreenchange",upd));upd();})();
 </script>
 </body>
 </html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MSB255 Interactive Materials</title>
+<meta name="description" content="Interactive simulations and materials for MSB255 Supply Chain and Operations Management, University of Stavanger, School of Business and Law.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --accent:#d9622b; --live:#2a9474; --soon:#8a96a3;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --live:#4cc59e; --soon:#6b7885; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --live:#4cc59e; --soon:#6b7885; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:40px 16px 56px;display:grid;gap:36px}
+header{display:grid;gap:8px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(28px,5vw,44px)/1.08 var(--f-display);margin:0;text-wrap:balance}
+.lede{color:var(--muted);max-width:68ch;margin:0}
+section{display:grid;gap:14px}
+.topic-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
+h2{font:600 21px/1.2 var(--f-display);margin:0}
+.meta{font:500 12px var(--f-mono);color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{display:grid;gap:8px;align-content:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 18px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card h3{font:600 17px/1.25 var(--f-display);margin:0}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.tag{justify-self:start;font:600 10px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:99px;border:1px solid currentColor}
+.tag.live{color:var(--live)} .tag.soon{color:var(--soon)}
+.card.soon{opacity:.62}
+.go{font:600 13px var(--f-mono);color:var(--accent)}
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;display:grid;gap:6px}
+footer p{margin:0;max-width:75ch}
+footer b{color:var(--ink);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent,var(--marker))}.fs-btn[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span class="eyebrow">University of Stavanger · School of Business and Law</span><button type="button" class="fs-btn" hidden>⛶ Full screen</button></div>
+    <h1>MSB255 Supply Chain and Operations Management</h1>
+    <p class="lede">Interactive simulations for the lectures. Move the sliders, watch the models react, and check your understanding with the built-in questions. New materials are added as the course progresses.</p>
+  </header>
+
+  <div id="topics"></div>
+
+  <footer>
+    <p>These simulations are designed to complement the MSB255 course materials. For full explanations and worked examples, please refer to the recommended textbook and other course resources.</p>
+    <p>Designed and developed by <b>Ali Türkyılmaz</b>, University of Stavanger, (with AI assistance)</p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   TO ADD A NEW PAGE: copy one { ... } line inside "items",
+   change title / text / file, and set live: true once the
+   file is uploaded to the same GitHub folder.
+   ============================================================ */
+const TOPICS = [
+  {
+    title: "Inventory Management",
+    items: [
+      { title: "Inventory Record Systems", text: "ABC analysis, record accuracy and cycle counting.",                               file: "inventory-record-systems.html", live: true },
+      { title: "EOQ Cost Curves",          text: "Holding, ordering and total cost against order quantity. See why the EOQ is robust.", file: "eoq-cost-curves.html",       live: true },
+      { title: "Inventory Replenishment",  text: "Animated sawtooth: reorder point, lead time, safety stock and stockouts under uncertain demand.", file: "inventory-replenishment.html", live: true },
+      { title: "Newsvendor Service Level", text: "Single-period decisions: critical ratio, optimal order quantity and expected profit.", file: "newsvendor-service-level.html", live: true }
+    ]
+  }
+];
+
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+document.getElementById("topics").innerHTML = TOPICS.map(t => `
+  <section>
+    <div class="topic-head"><h2>${esc(t.title)}</h2>${t.meta ? `<span class="meta">${esc(t.meta)}</span>` : ""}</div>
+    <div class="grid">
+      ${t.items.map(i => i.live
+        ? `<a class="card" href="${esc(i.file)}"><span class="tag live">Open</span><h3>${esc(i.title)}</h3><p>${esc(i.text)}</p><span class="go">Launch →</span></a>`
+        : `<div class="card soon" aria-disabled="true"><span class="tag soon">Coming soon</span><h3>${esc(i.title)}</h3><p>${esc(i.text)}</p></div>`
+      ).join("")}
+    </div>
+  </section>`).join("");
+</script>
+<script>
+(()=>{let d=document;try{if(parent!==window&&parent.__scomShell)d=parent.document}catch(e){}
+const b=document.querySelectorAll(".fs-btn");if(!d.fullscreenEnabled){return;}
+const upd=()=>b.forEach(x=>x.textContent=d.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
+b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen().catch(()=>{}));});
+d.addEventListener("fullscreenchange",upd);addEventListener("pagehide",()=>d.removeEventListener("fullscreenchange",upd));upd();})();
+</script>
+</body>
+</html>

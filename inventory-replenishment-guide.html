@@ -96,7 +96,7 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
 <div class="wrap">
   <nav class="topnav" aria-label="Guide navigation">
     <a href="inventory-replenishment.html">← Back to simulation</a>
-    <span style="display:flex;gap:18px;align-items:center"><button type="button" class="fs-btn" hidden>⛶ Full screen</button><a class="home" href="index.html">All simulations</a></span>
+    <span style="display:flex;gap:18px;align-items:center"><button type="button" class="fs-btn" hidden>⛶ Full screen</button><a class="home" href="home.html">All simulations</a></span>
   </nav>
   <header>
     <span class="eyebrow">LEARNER GUIDE · INTERACTIVE SIMULATION</span>
@@ -167,10 +167,11 @@ a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-of
   <footer>MSB255 Supply Chain and Operations Management · University of Stavanger, School of Business and Law</footer>
 </div>
 <script>
-(()=>{const b=document.querySelectorAll(".fs-btn");if(!document.fullscreenEnabled){return;}
-const upd=()=>b.forEach(x=>x.textContent=document.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
-b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{}));});
-document.addEventListener("fullscreenchange",upd);upd();})();
+(()=>{let d=document;try{if(parent!==window&&parent.__scomShell)d=parent.document}catch(e){}
+const b=document.querySelectorAll(".fs-btn");if(!d.fullscreenEnabled){return;}
+const upd=()=>b.forEach(x=>x.textContent=d.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
+b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen().catch(()=>{}));});
+d.addEventListener("fullscreenchange",upd);addEventListener("pagehide",()=>d.removeEventListener("fullscreenchange",upd));upd();})();
 </script>
 </body>
 </html>
