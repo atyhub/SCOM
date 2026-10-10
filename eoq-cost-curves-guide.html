@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EOQ Cost Curves: Learner Guide</title>
+<meta name="description" content="Learner guide for the EOQ Cost Curves simulation: theory, formulas and how to use the simulation. MSB255 Supply Chain and Operations Management, University of Stavanger.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=STIX+Two+Text:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --accent:#d9622b; --teal:#2a9474; --navy:#1f3a5f; --shade:#eef2f5;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math",Cambria,Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--f-body);margin:0}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 48px}
+.topnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.topnav a{color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.topnav a:hover{color:var(--accent)}
+.topnav .home{color:var(--muted);font-weight:500}
+header{display:grid;gap:6px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(26px,4.5vw,36px)/1.15 var(--f-display);margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;font-style:italic}
+main{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 28px 28px}
+@media (max-width:600px){main{padding:4px 16px 20px}}
+h2{font:600 23px/1.25 var(--f-display);margin:36px 0 10px;display:flex;align-items:baseline;gap:10px;scroll-margin-top:16px}
+h2 .num{font:600 14px var(--f-mono);color:var(--surface);background:var(--teal);border-radius:6px;padding:2px 8px;position:relative;top:-2px}
+h3{font:600 18px/1.3 var(--f-display);margin:26px 0 6px;color:var(--teal)}
+h4{font:600 16px/1.3 var(--f-body);margin:22px 0 4px;color:var(--navy)}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 14px;padding-left:24px}
+li{margin:4px 0}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+.tbl{overflow-x:auto;margin:6px 0 16px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+thead th{background:var(--shade);font-weight:600}
+tbody th{background:var(--shade);font-weight:500;white-space:nowrap}
+.tbl.fill td{height:2.1em;min-width:5em}
+.formulas{display:grid;grid-template-columns:minmax(150px,34%) 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:8px 0 16px}
+.formulas>div{padding:9px 12px;border-bottom:1px solid var(--line)}
+.formulas>div:nth-last-child(-n+2){border-bottom:0}
+.f-lab{background:var(--shade);font-size:14px;color:var(--muted)}
+.f-eq{font:18px/1.45 var(--f-math)}
+@media (max-width:600px){.formulas{grid-template-columns:1fr}.formulas>div.f-lab{border-bottom:0;padding-bottom:2px}}
+figure{margin:14px 0 20px}
+figure img{display:block;width:100%;margin:0 auto;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+figcaption{font-size:13.5px;color:var(--muted);font-style:italic;margin-top:6px;text-align:center}
+.box{background:var(--shade);border-left:4px solid var(--accent);border-radius:6px;padding:12px 16px;margin:10px 0 16px}
+.ref{padding-left:1.6em;text-indent:-1.6em;font-size:14.5px}
+details.answers{margin-top:36px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+details.answers summary{cursor:pointer;padding:14px 18px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font:600 18px var(--f-display);list-style:none}
+details.answers summary::-webkit-details-marker{display:none}
+details.answers summary::before{content:"▸";color:var(--accent);transition:transform .2s}
+details.answers[open] summary::before{transform:rotate(90deg)}
+details.answers .hint{font:400 13.5px var(--f-body);color:var(--muted)}
+.ans-body{padding:0 18px 12px}
+.ans-body h3{margin-top:12px}
+.end{display:flex;flex-direction:column;align-items:center;gap:12px;margin:32px 0 8px}
+.btn{display:inline-block;font:600 15px var(--f-body);padding:11px 22px;border-radius:8px;background:var(--ink);color:var(--surface);text-decoration:none}
+.btn:hover{opacity:.88}
+.pdf{font-size:14px;color:var(--muted)}
+.pdf a{color:var(--muted)}
+footer{font-size:13px;color:var(--muted);text-align:center;margin-top:28px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media print{
+  body{background:#fff;font-size:11pt}
+  .topnav,.end,.no-print{display:none!important}
+  main{border:0;padding:0}
+  .wrap{max-width:none;padding:0}
+  h2,h3,h4{break-after:avoid}
+  figure,.formulas,table{break-inside:avoid}
+  figure img{max-height:110mm;width:auto!important;max-width:100%!important}
+  details.answers{border:0;background:#fff;break-before:page}
+  details.answers summary::before{content:""}
+  details.answers .hint{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav" aria-label="Guide navigation">
+    <a href="eoq-cost-curves.html">← Back to simulation</a>
+    <a class="home" href="index.html">All simulations</a>
+  </nav>
+  <header>
+    <span class="eyebrow">LEARNER GUIDE · INTERACTIVE SIMULATION</span>
+    <h1>EOQ Cost Curves: How Much to Order</h1>
+    <p class="sub">MSB255 Supply Chain and Operations Management</p>
+  </header>
+  <main>
+<h2 id="1-about-this-simulation"><span class="num">1</span>About this simulation</h2>
+<p>How much should we order each time? Ordering in large batches means few orders, but a lot of stock sitting on the shelf. Ordering in small batches keeps stock low, but means many orders. The <strong>economic order quantity (EOQ)</strong> is the order size at which these two costs balance and the total annual cost is lowest.</p>
+<p>This simulation draws the three cost curves (holding, ordering and total cost) against the order quantity. You can drag your own order quantity along the curves, change the demand and cost inputs, and pin the old curves to compare before and after.</p>
+<p>After working through this guide, you should be able to:</p>
+<ul><li>explain the trade-off between holding cost and ordering cost, and why total cost is U-shaped;</li><li>calculate the EOQ, the minimum total cost, the number of orders per year and the time between orders;</li><li>predict how the EOQ moves when demand, ordering cost or holding cost changes (the square-root effect);</li><li>explain why total cost is flat near the EOQ, and calculate the cost of ordering more or less than the EOQ.</li></ul>
+<h2 id="2-theory-background"><span class="num">2</span>Theory background</h2>
+<h3>Assumptions of the basic EOQ model</h3>
+<ul><li>Demand is known, constant and independent of other items.</li><li>The lead time is known and constant.</li><li>Each order is received all at once (instantaneous receipt).</li><li>There are no quantity discounts, so the purchase price does not depend on Q.</li><li>The only variable costs are the cost of placing an order (setup or ordering cost) and the cost of holding stock (holding or carrying cost).</li><li>Stockouts are avoided completely if orders are placed at the right time.</li></ul>
+<h3>Notation</h3>
+<p>The notation is the same as in the course formula sheet.</p>
+<div class="tbl"><table><thead><tr><th>Symbol</th><th>Meaning</th></tr></thead><tbody><tr><td>D</td><td>Annual demand (units/year)</td></tr><tr><td>S</td><td>Ordering or setup cost per order ($/order)</td></tr><tr><td>H</td><td>Holding cost per unit per year ($/unit/year)</td></tr><tr><td>I, P</td><td>Holding cost as a percentage of the unit price per year; unit price ($/unit), so H = I × P</td></tr><tr><td>Q, Q*</td><td>Order quantity; optimal order quantity (EOQ)</td></tr><tr><td>N</td><td>Number of orders per year</td></tr><tr><td>TC</td><td>Total annual cost of ordering and holding</td></tr></tbody></table></div>
+<h3>The two costs and the total</h3>
+<p>With constant demand, stock falls from Q to zero and is then replenished, so the <strong>average inventory is Q/2</strong>. Each unit held for a year costs H. The number of orders per year is D/Q, and each order costs S.</p>
+<div class="formulas"><div class="f-lab">Annual holding cost</div><div class="f-eq">Holding cost = (Q / 2) × H</div><div class="f-lab">Annual ordering cost</div><div class="f-eq">Ordering cost = (D / Q) × S</div><div class="f-lab">Total annual cost</div><div class="f-eq">TC = (D / Q) × S + (Q / 2) × H</div><div class="f-lab">Holding cost from a rate</div><div class="f-eq">H = I × P</div></div>
+<p>Holding cost rises in a straight line as Q grows, while ordering cost falls along a curve. Their sum, the total cost, is U-shaped. The purchase cost P × D is left out here because it is the same for every Q when there are no quantity discounts.</p>
+<h3>The economic order quantity</h3>
+<p>Total cost is lowest where the holding and ordering costs are equal. Setting (Q/2) × H = (D/Q) × S and solving for Q gives:</p>
+<div class="formulas"><div class="f-lab">Economic order quantity</div><div class="f-eq">Q* = √(2DS / H)</div><div class="f-lab">Minimum total cost</div><div class="f-eq">TC* = √(2DSH)   (holding cost = ordering cost = TC*/2)</div><div class="f-lab">Orders per year</div><div class="f-eq">N = D / Q*</div><div class="f-lab">Time between orders</div><div class="f-eq">Time between orders = working days per year / N</div></div>
+<p><strong>Worked example (default settings).</strong> D = 1,000 units/year, S = $10/order, H = $0.50/unit/year.</p>
+<ul><li>Q* = √(2 × 1,000 × 10 / 0.50) = √40,000 = <strong>200 units</strong>.</li><li>Holding cost = (200/2) × 0.50 = $50 and ordering cost = (1,000/200) × 10 = $50, so <strong>TC* = $100</strong>.</li><li>N = 1,000 / 200 = <strong>5 orders per year</strong>. With 365 working days the time between orders is 365/5 = <strong>73 days</strong>; with 250 working days it is 50 days.</li></ul>
+<h3>How the EOQ responds to changes: the square-root effect</h3>
+<p>Because of the square root, the EOQ changes less than proportionally:</p>
+<ul><li>If D or S doubles, Q* grows by √2 ≈ 1.41 (41%), not by 100%. Q* doubles only when D or S becomes four times larger.</li><li>If H doubles, Q* falls to 1/√2 ≈ 0.71 of its old value. A higher holding cost means ordering smaller amounts more often.</li><li>The minimum total cost TC* = √(2DSH) also grows with the square root of each input.</li></ul>
+<h3>The flat bottom: why the EOQ is robust</h3>
+<p>Near Q* the total cost curve is very flat. The cost of using any other quantity Q can be expressed relative to the minimum:</p>
+<div class="formulas"><div class="f-lab">Cost penalty of a non-optimal Q</div><div class="f-eq">TC(Q) / TC* = ½ × (Q / Q* + Q* / Q)</div></div>
+<div class="tbl"><table><tbody><tr><th scope="row">Q / Q*</th><td>0.5</td><td>0.75</td><td>1</td><td>1.5</td><td>2</td><td>3</td></tr><tr><th scope="row">TC above minimum</th><td>+25%</td><td>+4.2%</td><td>0%</td><td>+8.3%</td><td>+25%</td><td>+67%</td></tr></tbody></table></div>
+<p>Ordering 50% more than the EOQ costs only about 8% extra. This is good news in practice: demand and cost figures are estimates, and small errors in them hardly change the total cost. Note also that, for the same number of units away from Q*, ordering too little costs more than ordering too much (100 units below Q* = 200 costs +25%, 100 units above costs +8.3%).</p>
+<h2 id="3-how-to-use-the-simulation"><span class="num">3</span>How to use the simulation</h2>
+<h3>Getting started</h3>
+<ul><li>Set the <strong>Model inputs</strong>: annual demand D, ordering cost S and holding cost. Holding cost can be entered as <strong>H directly</strong> or as <strong>I × P</strong> (a percentage of the unit price).</li><li>Choose <strong>your order quantity</strong> Q with the slider, or drag the orange line on the chart. <strong>Set Q = EOQ</strong> moves it to the optimum.</li><li><strong>Pin curves</strong> keeps a dashed copy of the current curves, so you can change an input and compare. <strong>Clear pin</strong> removes it.</li><li>The axes stay fixed so that you can see curves shift. Press <strong>Fit axes</strong> to rescale them.</li><li><strong>Working days per year</strong> only affects the time between orders.</li><li>The <strong>Check your understanding</strong> box generates new practice questions on the EOQ, minimum cost, orders per year and the cost of a non-optimal Q.</li></ul>
+<h3>What you see</h3>
+<figure><img style="max-width:100%" src="img/eoq-cost-curves-ec-chart.png" alt="Figure 1. Default settings with Q = 300. The EOQ (200) is where the holding and ordering lines cross; the red bar shows how far TC(300) = $108 lies above the minimum of $100." loading="lazy"><figcaption>Figure 1. Default settings with Q = 300. The EOQ (200) is where the holding and ordering lines cross; the red bar shows how far TC(300) = $108 lies above the minimum of $100.</figcaption></figure>
+<ul><li><strong>Green line:</strong> holding cost (Q/2) × H. <strong>Purple curve:</strong> ordering cost (D/Q) × S. <strong>Black curve:</strong> total cost.</li><li><strong>Dotted vertical line and black dot:</strong> the EOQ and the minimum total cost. The open circle marks where holding cost equals ordering cost.</li><li><strong>Orange line:</strong> your order quantity Q, with its holding, ordering and total cost marked. The red bar shows the extra cost compared with the minimum.</li><li><strong>Statistics row:</strong> EOQ, minimum total cost, orders per year at Q* and time between orders, each with its formula underneath.</li></ul>
+<figure><img style="max-width:66%" src="img/eoq-cost-curves-ec-inputs.png" alt="Figure 2. Model inputs and the cost table comparing your Q with the EOQ. The sentence below the table explains which cost dominates." loading="lazy"><figcaption>Figure 2. Model inputs and the cost table comparing your Q with the EOQ. The sentence below the table explains which cost dominates.</figcaption></figure>
+<h3>Try this</h3>
+<h4><strong>A. The trade-off</strong></h4>
+<ol><li>With the default inputs, calculate Q*, TC* and N by hand. Then press <strong>Set Q = EOQ</strong> and check your answers.</li><li>Set Q to 100, 200, 400 and 600 and complete the table below. At which Q are holding and ordering cost equal?</li></ol>
+<div class="tbl fill"><table><thead><tr><th>Q</th><th>Holding cost</th><th>Ordering cost</th><th>Total cost</th><th>% above minimum</th></tr></thead><tbody><tr><td>100</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>200</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>400</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr><tr><td>600</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tbody></table></div>
+<h4><strong>B. Moving the EOQ</strong></h4>
+<ol><li>Press <strong>Pin curves</strong>, then double the annual demand to 2,000. Predict the new EOQ before you look. By what percentage did it change?</li><li>Return D to 1,000. Predict, then test, the EOQ when S rises from $10 to $40, and when H rises from $0.50 to $2.00.</li></ol>
+<figure><img style="max-width:100%" src="img/eoq-cost-curves-ec-pin.png" alt="Figure 3. Pinned curves (dashed) for D = 1,000 and the new curves for D = 2,000. The EOQ moves from 200 to 283, not to 400." loading="lazy"><figcaption>Figure 3. Pinned curves (dashed) for D = 1,000 and the new curves for D = 2,000. The EOQ moves from 200 to 283, not to 400.</figcaption></figure>
+<h4><strong>C. Holding cost as a percentage of price</strong></h4>
+<ol><li>Switch to <strong>I × P</strong>. Check that I = 20% and P = $2.50 give the same H = $0.50 as before.</li><li>Raise I to 40%. What is the new H, and what happens to the EOQ and the minimum cost? Why might a firm with a high cost of capital order smaller quantities?</li><li>Change the working days per year from 365 to 250. What changes, and what stays the same?</li></ol>
+<h2 id="4-check-your-understanding"><span class="num">4</span>Check your understanding</h2>
+<ol><li>D = 1,200 units/year, S = $25 per order and H = $6 per unit per year. Calculate Q*, TC* and N. With 240 working days, how many days pass between orders?</li><li>A product costs P = $20 and the holding cost rate is I = 25% per year. D = 2,000 units and S = $50. What is H, and what is the EOQ?</li><li>If annual demand becomes four times larger, what happens to the EOQ and to the minimum total cost?</li><li>The EOQ is 500 units. A manager orders 750 units each time. By what percentage is total cost above the minimum? What if the manager orders 250?</li><li>With the default inputs (Q* = 200, TC* = $100), a supplier only accepts orders of at least 400 units. What is the total annual cost now, and how is it split?</li><li>Explain in two or three sentences why the flat bottom of the total cost curve is useful for managers.</li></ol>
+<h2 id="references">References</h2>
+<p class="ref">MSB255 Supply Chain and Operations Management: course materials. University of Stavanger.</p>
+<p class="ref">Heizer, J., Render, B., &amp; Munson, C. (2017). <em>Operations Management: Sustainability and Supply Chain Management</em> (12th ed.). Pearson.</p>
+<details class="answers" id="answers"><summary><span>Answers and expected results</span><span class="hint">Try the exercises first, then open to check</span></summary><div class="ans-body">
+<h3>Simulation results</h3>
+<div class="tbl"><table><thead><tr><th>Run</th><th>Result</th></tr></thead><tbody><tr><td>Defaults at Q* = 200</td><td>Holding $50, ordering $50, TC* $100, N = 5.0, 73 days between orders (365 working days)</td></tr><tr><td>Q = 100</td><td>Holding $25, ordering $100, total $125 (+25%)</td></tr><tr><td>Q = 400</td><td>Holding $100, ordering $25, total $125 (+25%)</td></tr><tr><td>Q = 600</td><td>Holding $150, ordering $16.67, total $166.67 (+67%)</td></tr><tr><td>D = 2,000</td><td>Q* = 283 (+41%), TC* = $141, N = 7.1</td></tr><tr><td>S = $40</td><td>Q* = 400 (four times S doubles Q*), TC* = $200</td></tr><tr><td>H = $2.00</td><td>Q* = 100 (four times H halves Q*), TC* = $200</td></tr><tr><td>I × P, I = 40%</td><td>H = 40% × $2.50 = $1.00; Q* = 141, TC* = $141</td></tr><tr><td>250 working days</td><td>Time between orders = 250 / 5 = 50 days; Q*, TC* and N are unchanged</td></tr></tbody></table></div>
+<h3>Check your understanding</h3>
+<ol><li>Q* = √(2 × 1,200 × 25 / 6) = √10,000 = 100 units. TC* = √(2 × 1,200 × 25 × 6) = $600 ($300 holding + $300 ordering). N = 1,200 / 100 = 12 orders. Time between orders = 240 / 12 = 20 days.</li><li>H = I × P = 0.25 × $20 = $5 per unit per year. Q* = √(2 × 2,000 × 50 / 5) = √40,000 = 200 units.</li><li>Both are multiplied by √4 = 2: the EOQ doubles and the minimum total cost doubles. N = D/Q* also doubles.</li><li>Q/Q* = 1.5: ½ × (1.5 + 1/1.5) = 1.083, so about 8.3% above the minimum. Q/Q* = 0.5: ½ × (0.5 + 2) = 1.25, so 25% above.</li><li>Holding = (400/2) × 0.50 = $100; ordering = (1,000/400) × 10 = $25; TC = $125, which is $25 (25%) above the minimum. Holding cost now dominates.</li><li>Demand and cost figures are only estimates. Because total cost is flat near Q*, an order quantity that is somewhat off, or rounded to a convenient pack size, costs only a little more than the true optimum. The EOQ is therefore a robust guide rather than a number that must be hit exactly.</li></ol>
+</div></details>
+  </main>
+  <div class="end">
+    <a class="btn" href="eoq-cost-curves.html">Open the simulation →</a>
+    <span class="pdf"><a href="pdf/eoq-cost-curves-guide.pdf" download>Download PDF</a> of this guide</span>
+  </div>
+  <footer>MSB255 Supply Chain and Operations Management · University of Stavanger</footer>
+</div>
+</body>
+</html>

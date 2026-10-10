@@ -28,6 +28,10 @@
 body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
 .wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:22px}
 header{display:grid;gap:6px}
+.guide-link{font:600 13px/1 var(--f-body);color:var(--marker);text-decoration:none;border:1.5px solid var(--marker);border-radius:999px;padding:7px 12px;white-space:nowrap}
+.guide-link:hover{background:var(--marker);color:#fff}
+.headrow{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
+
 .eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
 h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
 h2{font:600 20px/1.2 var(--f-display);margin:0}
@@ -115,7 +119,7 @@ td b{font-family:var(--f-display);font-weight:600}
 <body>
 <div class="wrap">
   <header>
-    <span class="eyebrow">Inventory record accuracy</span>
+    <div class="headrow"><span class="eyebrow">Inventory record accuracy</span><a class="guide-link" href="inventory-record-systems-guide.html">Guide: theory &amp; how to use →</a></div>
     <h1>How do we know what's on the shelf?</h1>
     <p class="lede">Every reorder decision depends on knowing how much stock is really there. <b>Record accuracy</b> comes before inventory models, production schedules and, in the end, sales. There are three common ways to keep track. Pick one below, press play and watch what the manager knows compared with what is really on the shelf.</p>
   </header>

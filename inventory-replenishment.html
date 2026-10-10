@@ -28,6 +28,10 @@
 body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0}
 .wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:28px 40px;display:grid;gap:22px}
 header{display:grid;gap:6px}
+.guide-link{font:600 13px/1 var(--f-body);color:var(--marker);text-decoration:none;border:1.5px solid var(--marker);border-radius:999px;padding:7px 12px;white-space:nowrap}
+.guide-link:hover{background:var(--marker);color:#fff}
+.headrow{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap}
+
 .eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--marker)}
 h1{font:700 clamp(26px,4.5vw,38px)/1.1 var(--f-display);margin:0;text-wrap:balance}
 .lede{color:var(--muted);max-width:70ch;margin:0}
@@ -82,7 +86,7 @@ button:hover{opacity:.88}
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">Continuous review · fixed order quantity</span>
+    <div class="headrow"><span class="eyebrow">Continuous review · fixed order quantity</span><a class="guide-link" href="inventory-replenishment-guide.html">Guide: theory &amp; how to use →</a></div>
     <h1>When should we reorder?</h1>
     <p class="lede">Stock is used at a steady <b>usage rate d</b>. When the inventory position falls to the <b>reorder point (ROP)</b>, an order of <b>Q</b> units is placed. It arrives one <b>lead time L</b> later, just as stock runs out. Press play and watch the sawtooth build.</p>
   </header>
