@@ -130,8 +130,8 @@ td b{font-family:var(--f-display);font-weight:600}
   <section class="panel" id="p-per" role="tabpanel" aria-labelledby="t-per">
     <div class="card idea">
       <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true"><rect x="8" y="6" width="28" height="34" rx="4" fill="none" stroke="var(--blue)" stroke-width="2.5"/><rect x="15" y="3" width="14" height="7" rx="2" fill="var(--blue)"/><path d="M14 20l4 4 8-8M14 31h16" stroke="var(--blue)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
-      <div><h2>Count every R days, then order back up to a target level S</h2>
-      <p>Someone walks the shelf at fixed intervals, counts what is there and orders enough to bring stock up to <b>S</b>. Small retailers use this, and so do <b>vendor-managed</b> arrangements, where the supplier's rep checks and restocks. The catch: <b>between counts nobody is watching</b>.</p></div>
+      <div><h2>Count every P days, then order back up to a target level T</h2>
+      <p>Someone walks the shelf at fixed intervals, counts what is there and orders enough to bring stock up to <b>T</b>. Small retailers use this, and so do <b>vendor-managed</b> arrangements, where the supplier's rep checks and restocks. The catch: <b>between counts nobody is watching</b>.</p></div>
     </div>
     <div class="grid2">
       <div class="card" style="display:grid;gap:12px;min-width:0">
@@ -142,10 +142,10 @@ td b{font-family:var(--f-display);font-weight:600}
       </div>
       <div class="card controls">
         <h3>Settings</h3>
-        <div class="field"><div class="row"><label for="perR">Count every R days</label><output id="perROut">7</output></div><input type="range" id="perR" min="2" max="14" value="7"></div>
+        <div class="field"><div class="row"><label for="perR">Count every P days (review period)</label><output id="perROut">7</output></div><input type="range" id="perR" min="2" max="14" value="7"></div>
         <div class="field"><div class="row"><label for="perL">Supplier lead time L (days)</label><output id="perLOut">2</output></div><input type="range" id="perL" min="1" max="6" value="2"></div>
-        <div class="field"><div class="row"><label for="perS">Order up to S (units)</label><output id="perSOut">90</output></div><input type="range" id="perS" min="20" max="300" step="5" value="90"></div>
-        <p class="note">Average demand is 8 units a day, varying from day to day. S has to cover demand for <b>R + L</b> days: with R = <span id="perRL">7 + 2</span>, that's about <b id="perNeed">72</b> units plus a buffer.</p>
+        <div class="field"><div class="row"><label for="perS">Target level T (units)</label><output id="perSOut">90</output></div><input type="range" id="perS" min="20" max="300" step="5" value="90"></div>
+        <p class="note">Average demand is 8 units a day (σ<sub>d</sub> ≈ 2.8), varying from day to day. T has to cover demand for <b>P + L</b> days: with P + L = <span id="perRL">7 + 2</span>, expected demand is <b id="perNeed">72</b> units. For 95% service, T = d(P+L) + Z·σ<sub>d</sub>·√(P+L) ≈ <b id="perT95">86</b> units.</p>
         <div class="stats">
           <div class="stat"><span class="lbl">Avg stock</span><span class="v" id="perAvg">–</span></div>
           <div class="stat"><span class="lbl">Stockout days</span><span class="v" id="perSO">–</span></div>
@@ -155,8 +155,8 @@ td b{font-family:var(--f-display);font-weight:600}
     </div>
     <div class="card"><h3>What to notice</h3><ul class="notice">
       <li>The blue line is <b>flat between counts</b>. The real stock keeps falling, but the record doesn't change until the next count.</li>
-      <li>Make R longer and you need a <b>bigger S</b> (more stock) to avoid red stockout days. That extra stock is the price of less control.</li>
-      <li>Try R = 14 with S = 90 and watch the shelf run empty before anyone notices.</li>
+      <li>Make P longer and you need a <b>bigger T</b> (more stock) to avoid red stockout days. That extra stock is the price of less control.</li>
+      <li>Try P = 14 with T = 90 and watch the shelf run empty before anyone notices.</li>
     </ul></div>
   </section>
 
@@ -243,7 +243,7 @@ td b{font-family:var(--f-display);font-weight:600}
     <h2 id="cmpH">The three systems side by side</h2>
     <div class="tablebox"><table>
       <tr><th>System</th><th>How stock is known</th><th>When to order</th><th>Strength</th><th>Weakness</th></tr>
-      <tr><td><b>Periodic</b></td><td>Physical count every R days</td><td>At each count, up to S</td><td>Simple; suits small shops and vendor-managed inventory</td><td>No control between counts, so extra stock is needed</td></tr>
+      <tr><td><b>Periodic</b></td><td>Physical count every P days</td><td>At each count, up to T</td><td>Simple; suits small shops and vendor-managed inventory</td><td>No control between counts, so extra stock is needed</td></tr>
       <tr><td><b>Two-bin</b></td><td>Look at the bins</td><td>When the first bin is empty</td><td>No counting, a visual signal</td><td>Only for simple items with steady demand</td></tr>
       <tr><td><b>Perpetual</b></td><td>Every receipt and sale is recorded</td><td>When the record hits the ROP</td><td>Real-time control, automatic reordering</td><td>Needs scanning systems and accurate records (cycle counting)</td></tr>
     </table></div>
@@ -314,18 +314,18 @@ function perDraw(){
 }
 function perEventFor(x){
   if(x.short>0)return["so",`Day ${x.t}: shelf ran empty, ${x.short} customers left without the product.`];
-  if(x.count)return["cnt",`Day ${x.t}: count! ${x.known} on the shelf. Ordered ${x.order} to bring stock up to S = ${PER.S}.`];
+  if(x.count)return["cnt",`Day ${x.t}: count! ${x.known} on the shelf. Ordered ${x.order} to bring stock up to T = ${PER.S}.`];
   if(x.arrived)return["arr",`Day ${x.t}: delivery of ${x.arrived} units arrived.`];
   return["",`Day ${x.t}: no count today. The record still says ${x.known}, but the shelf holds ${x.end}.`];
 }
 function perStep(){if(perShown>=PER.N){perStop();return;}perShown++;perDraw();const[k,t]=perEventFor(perSim[perShown-1]);setEvent($("perEvent"),k,t);}
 function perStop(){clearInterval(perTimer);perTimer=null;$("perPlay").textContent="▶ Play";}
 $("perPlay").addEventListener("click",()=>{if(perTimer){perStop();return;}if(perShown>=PER.N)perShown=0;$("perPlay").textContent="❚❚ Pause";perTimer=setInterval(perStep,reduce?60:380);});
-$("perAll").addEventListener("click",()=>{perStop();perShown=PER.N;perDraw();setEvent($("perEvent"),"","Whole period shown. Change R or S to compare.");});
+$("perAll").addEventListener("click",()=>{perStop();perShown=PER.N;perDraw();setEvent($("perEvent"),"","Whole period shown. Change P or T to compare.");});
 $("perReset").addEventListener("click",()=>{perStop();perShown=0;perDraw();setEvent($("perEvent"),"","Press play to start the month.");});
 function perParams(){PER.R=+$("perR").value;PER.L=+$("perL").value;PER.S=+$("perS").value;
   $("perROut").textContent=PER.R;$("perLOut").textContent=PER.L;$("perSOut").textContent=PER.S;
-  $("perRL").textContent=`${PER.R} + ${PER.L}`;$("perNeed").textContent=PER.d*(PER.R+PER.L);
+  $("perRL").textContent=`${PER.R} + ${PER.L}`;$("perNeed").textContent=PER.d*(PER.R+PER.L);$("perT95").textContent=Math.round(PER.d*(PER.R+PER.L)+1.645*0.35*PER.d*Math.sqrt(PER.R+PER.L));
   perSim=perSimulate();if(perShown===0&&!perTimer){}perDraw();}
 ["perR","perL","perS"].forEach(id=>$(id).addEventListener("input",()=>{perParams();if(!perTimer&&perShown>0){const[k,t]=perEventFor(perSim[perShown-1]);setEvent($("perEvent"),k,t);}}));
 
