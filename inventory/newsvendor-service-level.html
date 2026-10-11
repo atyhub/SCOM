@@ -184,7 +184,7 @@ svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-l
   <section class="cost" aria-labelledby="costH">
     <div style="display:grid;gap:4px">
       <h2 id="costH">Find the optimal Q from costs</h2>
-      <p class="sub">Enter the unit economics. The optimal stock level Q* makes the service level equal to the critical ratio. The chart below shows expected profit for every Q, with its peak at Q*.</p>
+      <p class="sub">For the bakery, a cinnamon bun costs NOK 12 to bake and sells for NOK 45. Buns left at closing time are given away, so the salvage value is 0, and there is no goodwill cost. These values are entered below; you can change them. The optimal stock level Q* makes the service level equal to the critical ratio. The chart below shows expected profit for every Q, with its peak at Q*.</p>
     </div>
     <div class="costs">
       <div class="field"><label for="price">Selling price, p</label><input id="price" type="number" step="0.01" min="0" value="45"></div>
@@ -431,10 +431,7 @@ new MutationObserver(redraw).observe(document.documentElement,{attributes:true,a
 const CASE={unit:"buns",per:"day",cur:"NOK"};
 function caseNote(){
   const n=x=>+(+x).toFixed(2);
-  if(!cm){$("caseNote").innerHTML="A bakery bakes cinnamon buns fresh every morning and sells them the same day. Enter valid prices and costs below to see the best order.";return;}
-  const left=cm.v>0?`Buns left at closing time are sold off at NOK ${n(cm.v)} each.`:"Buns left at closing time are given away, so they are worth nothing.";
-  const lo=cm.cr<0.5;
-  $("caseNote").innerHTML=`A bakery bakes cinnamon buns fresh every morning for NOK ${n(cm.c)} each and sells them for NOK ${n(cm.p)}. ${left} Daily demand is roughly normal with mean ${n(mu)} and standard deviation ${n(sd)}. The critical ratio is <b>${cm.cr.toFixed(2)}</b>, so the best order is <b>${lo?"below":"above"} mean demand</b>${lo?": a bun left over costs more than a bun short.":": a bun short costs more than a bun left over."}`;}
+  $("caseNote").innerHTML=`A bakery bakes cinnamon buns fresh every morning, before it knows how many customers will come. Buns that are not sold by closing time cannot be sold the next day. Daily demand is roughly normal with mean μ = ${n(mu)} and standard deviation σ = ${n(sd)}. How many buns should the bakery bake each morning?`;}
 
 // --- play a season ---
 let run=null,timer=null;
