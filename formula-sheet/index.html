@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MSB255 Formula Sheet</title>
+<meta name="description" content="Course formula sheet for MSB255 Supply Chain and Operations Management, University of Stavanger, School of Business and Law.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=STIX+Two+Text:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --accent:#d9622b; --teal:#2a9474; --navy:#1f3a5f; --shade:#eef2f5; --warn:#fff4e8;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math",Cambria,Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; --warn:#2b2219; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; --warn:#2b2219; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 var(--f-body);margin:0}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 48px}
+.topnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.topnav a,.fs-btn,.linkbtn{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none;background:none;border:0;padding:0;cursor:pointer}
+.topnav a:hover,.fs-btn:hover,.linkbtn:hover{color:var(--accent)}
+.fs-btn[hidden]{display:none}
+header{display:grid;gap:6px;margin-bottom:18px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(26px,4.5vw,36px)/1.15 var(--f-display);margin:0}
+.lede{color:var(--muted);margin:0;max-width:68ch}
+.tools{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 12px;display:grid;gap:10px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=search]{flex:1 1 220px;font:15px var(--f-body);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.chip{font:600 13px var(--f-body);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip.soon{color:var(--muted);cursor:default;opacity:.7}
+.toggle{display:flex;align-items:center;gap:8px;font:600 14px var(--f-body);cursor:pointer;user-select:none}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+section.block{margin-top:28px}
+.bhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.wk{font:600 12px var(--f-mono);color:var(--surface);background:var(--teal);border-radius:6px;padding:2px 8px}
+h2{font:600 23px/1.25 var(--f-display);margin:0}
+.bnote{color:var(--muted);font-size:14px}
+h3.group{font:600 15px var(--f-body);color:var(--navy);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.ctop{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.cname{font:600 16px var(--f-body)}
+.sim{font:600 12.5px var(--f-body);color:var(--accent);text-decoration:none;border:1.5px solid var(--accent);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.sim:hover{background:var(--accent);color:#fff}
+.f{font:19px/1.5 var(--f-math);margin:8px 0 6px;padding:8px 12px;background:var(--shade);border-radius:8px;position:relative}
+.f div+div{margin-top:2px}
+.vars{font-size:14px;color:var(--muted);margin:4px 0}
+.use,.watch{font-size:14.5px;margin:6px 0 0;padding-left:22px;position:relative}
+.use::before{content:"✓";position:absolute;left:2px;color:var(--teal);font-weight:700}
+.watch::before{content:"!";position:absolute;left:5px;color:var(--accent);font-weight:700}
+details.ex{margin-top:8px;font-size:14.5px}
+details.ex summary{cursor:pointer;color:var(--navy);font-weight:600}
+details.ex div{padding:6px 0 0 16px}
+.hideF .f{cursor:pointer}
+.hideF .f:not(.shown) > *{filter:blur(7px);user-select:none}
+.hideF .f:not(.shown)::after{content:"Recall it, then click to check";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 13px var(--f-body);color:var(--muted)}
+.notice{background:var(--warn);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-top:8px;font-size:14.5px;max-width:75ch}
+.guide{background:var(--warn);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:6px 0 14px}
+.guide h4{margin:0 0 6px;font:600 16px var(--f-body)}
+.guide ul{margin:0;padding-left:20px}.guide li{margin:3px 0;font-size:14.5px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--shade);font-weight:600}
+td.m{font:16px var(--f-math);white-space:nowrap}
+.tbl{overflow-x:auto}
+.soonlist{color:var(--muted);font-size:14.5px}
+.empty{color:var(--muted);padding:20px 0}
+@media (max-width:640px){#chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}#chips .chip{white-space:nowrap;flex:0 0 auto}.f{font-size:17px}}
+footer{font-size:13px;color:var(--muted);text-align:center;margin-top:32px}
+sub,sup{font-size:.72em}
+@media print{
+  body{background:#fff;font-size:10.5pt}
+  .topnav,.tools,.sim,details.ex summary::marker{display:none!important}
+  .wrap{max-width:none;padding:0}
+  .card{break-inside:avoid;padding:8px 10px;margin-bottom:6px}
+  .f{padding:4px 8px;font-size:15px}
+  details.ex{display:none}
+  .hideF .f > *{filter:none!important}.hideF .f::after{content:none!important}
+  section.block{break-before:auto}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav" aria-label="Site"><a href="../home.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
+  <header>
+    <span class="eyebrow">MSB255 · Study aid</span>
+    <h1>Formula sheet</h1>
+    <p class="lede">The formulas of the course, topic by topic, with what the symbols mean, when to use them and a worked example. New topics are added after each lecture. This sheet is for studying; it cannot be used in the exam.</p>
+    <aside class="notice" role="note"><strong>Please note.</strong> The formulas are listed in line with the textbook content (Heizer, Render and Munson), and some of them may not have been covered in class. The lecture notes are therefore the main reference. The instructor will announce later which formulas are required for the exam.</aside>
+  </header>
+
+  <div class="tools">
+    <div class="row">
+      <input type="search" id="q" placeholder="Search, e.g. break-even, bottleneck, MAD, EOQ" aria-label="Search formulas">
+      <label class="toggle"><input type="checkbox" id="test"> Test yourself</label>
+      <button type="button" class="linkbtn" id="print">Print / PDF</button>
+    </div>
+    <div class="row" id="chips" role="group" aria-label="Filter by topic"></div>
+  </div>
+
+  <main id="sheet"></main>
+
+  <section class="block" id="notation">
+    <div class="bhead"><h2>Notation used in this course</h2></div>
+    <p class="bnote">One symbol, one meaning. Where the same letter appears in two topics, the meaning is given for each.</p>
+    <div class="tbl"><table id="ntable"><thead><tr><th>Symbol</th><th>Meaning</th><th>Topic</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <footer>MSB255 Supply Chain and Operations Management · University of Stavanger, School of Business and Law</footer>
+</div>
+
+<script>
+/* ============================================================
+   TO ADD A TOPIC: add one block to BLOCKS (copy an existing one)
+   and set ready: true. Blocks with ready: false show as "coming".
+   ============================================================ */
+const BLOCKS = [
+{ id:"productivity", ch:"Ch. 1–2", title:"Productivity and operations strategy", ready:true,
+  groups:[
+  { name:"Productivity", items:[
+    { name:"Single-factor productivity", f:["Productivity = units produced / input used"],
+      vars:"Input = one resource only, for example labor-hours, machine-hours or energy",
+      use:"Tracks how well one resource is used, such as labor productivity.",
+      watch:"Production is output only; productivity is output relative to input.",
+      ex:"1,000 units with 250 labor-hours: 1,000 / 250 = 4 units per labor-hour." },
+    { name:"Multifactor productivity", f:["Multifactor productivity = output / (labor + material + energy + capital + miscellaneous)"],
+      vars:"Inputs are expressed in a common unit, usually money, so they can be added",
+      use:"Gives a fuller picture than labor productivity because it includes all the resources used.",
+      ex:"Collins Title closes 8 titles a day with labor $640 and overhead $400: 8 / 1,040 = 0.0077 titles per dollar. With a new system, 14 titles and overhead $800: 14 / 1,440 = 0.0097." },
+    { name:"Productivity change", f:["Change = (new productivity − old productivity) / old productivity"],
+      use:"Shows the percentage gain or loss after a change in the process.",
+      ex:"Collins Title labor productivity: 8 / 32 = 0.25 rises to 14 / 32 = 0.4375 titles per labor-hour, a 75% increase. Multifactor rises from 0.0077 to 0.0097, about 26%." }
+  ]},
+  { name:"Choosing among alternatives", items:[
+    { name:"Factor rating (weighted score)", f:["Weighted score of an option = Σ (weight<sub>i</sub> × score<sub>i</sub>)"],
+      vars:"Weights reflect the importance of each factor (usually summing to 1); scores are on one scale for all options",
+      use:"Comparing outsourcing providers, suppliers or locations on several qualitative factors.",
+      watch:"When totals are close, test how sensitive the choice is to small changes in the weights.",
+      ex:"National Architects rates three IT providers on seven factors: BIM 3.9, S.P.C. 3.3 and Telco 3.8, so BIM is selected, but only narrowly." }
+  ]}
+  ]},
+{ id:"design", ch:"Ch. 5, S5", title:"Product design and sustainability", ready:true,
+  groups:[
+  { name:"Decisions under uncertainty", items:[
+    { name:"Expected monetary value (decision tree)", f:["EMV of an alternative = Σ (probability of state × payoff in that state)"],
+      use:"Choosing between design options when demand is uncertain. Work back from the end of the tree and choose the branch with the highest EMV.",
+      watch:"Include every option, also “do nothing” (EMV = 0), and subtract all costs from the payoffs before weighting them.",
+      ex:"Silicon, Inc. (P(favorable) = 0.4): buy CAD, payoffs $1,000,000 or −$20,000, EMV = 0.4 · 1,000,000 + 0.6 · (−20,000) = $388,000. Hire engineers: 0.4 · 875,000 + 0.6 · 25,000 = $365,000. Buy CAD." }
+  ]},
+  { name:"Life cycle cost", items:[
+    { name:"Total life cycle cost", f:["Total life cycle cost = purchase cost + life cycle cost of fuel + life cycle operating cost"],
+      use:"Comparing products whose purchase price and running costs differ, such as vehicles or equipment.",
+      ex:"Ford TriVan: $28,000 + $31,167 + $35,200 = $94,367. Honda CityVan: $32,000 + $20,216 + $38,720 = $90,936. The CityVan is cheaper over 8 years." },
+    { name:"Crossover point (break-even between two options)", f:["F<sub>1</sub> + v<sub>1</sub> M = F<sub>2</sub> + v<sub>2</sub> M","M = (F<sub>2</sub> − F<sub>1</sub>) / (v<sub>1</sub> − v<sub>2</sub>)"],
+      vars:"F = fixed (purchase) cost; v = variable cost per unit of use (per mile, per unit); M = crossover volume",
+      use:"Finding the volume or usage at which two options cost the same.",
+      ex:"TriVan $0.3770 per mile, CityVan $0.3349 per mile: M = 4,000 / 0.0421 ≈ 95,012 miles. At 22,000 miles a year: 95,012 / 22,000 = 4.32 years." }
+  ]}
+  ]},
+{ id:"forecast", ch:"Ch. 4", title:"Demand forecasting", ready:true,
+  groups:[
+  { name:"Time-series methods", items:[
+    { name:"Naive forecast", f:["F<sub>t</sub> = A<sub>t−1</sub>"],
+      vars:"F<sub>t</sub> = forecast for period t; A<sub>t−1</sub> = actual demand last period",
+      use:"A quick benchmark: any better method must beat it.",
+      ex:"Last month's sales were 68 units, so the forecast for this month is 68." },
+    { name:"Moving average (n periods)", f:["F<sub>t</sub> = Σ (demand in the previous n periods) / n"],
+      use:"Demand is fairly stable, with little or no trend.",
+      watch:"A larger n smooths more but reacts more slowly, and a moving average always lags behind a trend.",
+      ex:"Sales of 10, 12 and 13 sheds in Jan to Mar give a 3-month forecast for April of (10 + 12 + 13) / 3 = 11.67." },
+    { name:"Weighted moving average", f:["F<sub>t</sub> = Σ (weight × demand) / Σ weights"],
+      use:"Recent periods should count more, for example when a trend may be starting.",
+      ex:"Weights 3, 2, 1 for the last three months (13, 12, 10): (3·13 + 2·12 + 1·10) / 6 = 12.17." },
+    { name:"Exponential smoothing", f:["F<sub>t</sub> = F<sub>t−1</sub> + α (A<sub>t−1</sub> − F<sub>t−1</sub>)","   = α A<sub>t−1</sub> + (1 − α) F<sub>t−1</sub>"],
+      vars:"α = smoothing constant, 0 ≤ α ≤ 1 (usually 0.05 to 0.50)",
+      use:"Short-term forecasts with little record keeping. High α reacts fast; low α suits a stable average.",
+      watch:"The bracket is last period's forecast error (actual minus forecast), not the other way round.",
+      ex:"Forecast 142 cars, actual 153, α = 0.20: F = 142 + 0.20 (153 − 142) = 144.2 ≈ 144." },
+    { name:"Exponential smoothing with trend", f:["F<sub>t</sub> = α A<sub>t−1</sub> + (1 − α)(F<sub>t−1</sub> + T<sub>t−1</sub>)","T<sub>t</sub> = β (F<sub>t</sub> − F<sub>t−1</sub>) + (1 − β) T<sub>t−1</sub>","FIT<sub>t</sub> = F<sub>t</sub> + T<sub>t</sub>"],
+      vars:"T<sub>t</sub> = smoothed trend; β = trend smoothing constant; FIT = forecast including trend",
+      use:"Demand shows a clear upward or downward trend.",
+      watch:"Compute F first, then T, then add them.",
+      ex:"A<sub>1</sub> = 12, F<sub>1</sub> = 11, T<sub>1</sub> = 2, α = 0.2, β = 0.4: F<sub>2</sub> = 0.2·12 + 0.8·13 = 12.8; T<sub>2</sub> = 0.4·1.8 + 0.6·2 = 1.92; FIT<sub>2</sub> = 14.72." },
+    { name:"Linear trend (least squares)", f:["ŷ = a + b x","b = (Σxy − n x̄ ȳ) / (Σx² − n x̄²)","a = ȳ − b x̄"],
+      vars:"x = time period; ŷ = forecast; a = intercept; b = slope",
+      use:"Medium- to long-range forecasts when demand follows a straight-line trend.",
+      ex:"With ŷ = 56.71 + 10.54 x, the forecast for period 8 is 56.71 + 10.54 · 8 = 141.0." },
+    { name:"Seasonal index (multiplicative)", f:["Index = average demand in the season / average demand over all seasons","Seasonal forecast = (annual forecast / number of seasons) × index"],
+      use:"Demand rises and falls in a regular pattern within the year.",
+      watch:"An index above 1 means the season is busier than average; the indices of all seasons average to 1.",
+      ex:"January averaged 90 laptops against 94 for all months: index = 0.957. Next year 1,200 are expected: January = 1,200 / 12 × 0.957 ≈ 96." }
+  ]},
+  { name:"Associative forecasting", items:[
+    { name:"Linear regression", f:["ŷ = a + b x"], vars:"x = an explanatory variable (for example local payroll), not time",
+      use:"Demand depends on another variable you can predict.",
+      ex:"Sales ($ millions) = 1.75 + 0.25 × payroll ($ billions). With payroll of 6: 1.75 + 1.5 = 3.25, so sales of $3.25 million." },
+    { name:"Standard error of the estimate", f:["S<sub>y,x</sub> = √( Σ (y − y<sub>c</sub>)² / (n − 2) )"],
+      vars:"y<sub>c</sub> = value from the regression line; n = number of data points",
+      use:"Measures the spread of the data around the regression line." },
+    { name:"Correlation", f:["r = (nΣxy − ΣxΣy) / √[(nΣx² − (Σx)²)(nΣy² − (Σy)²)]","r² = coefficient of determination"],
+      use:"r (−1 to 1) shows the strength and direction of the linear relationship; r² is the share of the variation in y explained by x.",
+      ex:"r = 0.901 gives r² = 0.81: 81% of the change in sales is explained by payroll." }
+  ]},
+  { name:"Forecast accuracy and control", items:[
+    { name:"Forecast error measures", f:["MAD = Σ |A − F| / n","MSE = Σ (A − F)² / n","MAPE = Σ (100 |A − F| / A) / n"],
+      use:"Compare methods or smoothing constants: the lower the error, the better.",
+      watch:"MSE punishes large errors most; MAPE is in percent, so it compares items of different size.",
+      ex:"Actual 10, 12, 14 and forecast 11, 11, 13: errors −1, 1, 1. MAD = 1, MSE = 1, MAPE = (10 + 8.3 + 7.1) / 3 ≈ 8.5%." },
+    { name:"Tracking signal", f:["Tracking signal = Σ (A − F) / MAD"],
+      use:"Checks for bias. A value drifting outside about ±4 MAD means the forecast is consistently too high or too low.",
+      ex:"Cumulative error 1 and MAD 1 give a tracking signal of 1, well inside the limits." }
+  ]}
+  ]},
+{ id:"supplychain", ch:"Ch. 11", title:"Supply chain management", ready:true,
+  groups:[
+  { name:"Supply chain performance", items:[
+    { name:"Bullwhip measure", f:["Bullwhip = variance of orders / variance of demand = σ<sup>2</sup><sub>orders</sub> / σ<sup>2</sup><sub>demand</sub>"],
+      use:"Shows whether a firm amplifies demand variation when it orders from its supplier.",
+      watch:"Above 1 means amplification (bullwhip); 1 means none; below 1 means the firm smooths its orders.",
+      ex:"A retailer faces demand variance 100 and places orders with variance 110: 110 / 100 = 1.10. Its distributor (110 in, 180 out) has 1.64." },
+    { name:"Percentage invested in inventory", f:["% invested in inventory = (average inventory investment / total assets) × 100"],
+      ex:"Home Depot: $11.4 billion of inventory and $44.4 billion of assets: 11.4 / 44.4 = 25.7%." },
+    { name:"Inventory turnover", f:["Inventory turnover = cost of goods sold / average inventory investment"],
+      use:"How many times a year inventory is sold and replaced; higher usually means leaner.",
+      ex:"PepsiCo: cost of goods sold $14.2 billion, average inventory $1.69 billion: 14.2 / 1.69 = 8.4 turns per year." },
+    { name:"Weeks of supply", f:["Weeks of supply = average inventory investment / (annual cost of goods sold / 52)"],
+      watch:"The reciprocal view of turnover: fewer weeks of supply is leaner.",
+      ex:"PepsiCo: 1.69 / (14.2 / 52) = 1.69 / 0.273 = 6.19 weeks." }
+  ]}
+  ]},
+{ id:"capacity", ch:"Ch. 7, S7", title:"Process and capacity", ready:true,
+  groups:[
+  { name:"Process choice", items:[
+    { name:"Crossover point between processes", f:["Total cost = F + V x","Crossover: F<sub>A</sub> + V<sub>A</sub> x = F<sub>B</sub> + V<sub>B</sub> x","x = (F<sub>B</sub> − F<sub>A</sub>) / (V<sub>A</sub> − V<sub>B</sub>)"],
+      vars:"F = fixed cost of the process; V = variable cost per unit; x = volume",
+      use:"Choosing a process (or software, equipment) for the expected volume: low fixed cost for low volume, low variable cost for high volume.",
+      ex:"Software A ($200,000 + $60 per report) and B ($300,000 + $25): x = 100,000 / 35 = 2,857. B and C ($400,000 + $10): x = 100,000 / 15 = 6,666. A is best up to 2,857 reports, B from 2,857 to 6,666, C above." }
+  ]},
+  { name:"Capacity measures", items:[
+    { name:"Design capacity, effective capacity and actual output", f:["Design capacity = maximum output under ideal conditions","Effective capacity = design capacity − planned losses","Actual output = effective capacity − unplanned losses"],
+      vars:"Planned losses: maintenance, breaks, setups, product mix. Unplanned losses: breakdowns, absence, late parts, quality problems",
+      ex:"Frito-Lay: 1,000 bags/hour × 16 hours = 16,000 bags/day. Planned losses 3 hours give 13,000; 0.25 hour of breakdowns gives an actual output of 12,750." },
+    { name:"Utilization and efficiency", f:["Utilization = actual output / design capacity","Efficiency = actual output / effective capacity"],
+      watch:"Utilization compares with design capacity, efficiency with effective capacity. Efficiency is therefore the higher of the two.",
+      ex:"Bakery: actual 148,000 rolls, effective 175,000, design 201,600. Utilization = 73.4%, efficiency = 84.6%. Adding a second line with output 130,000: 278,000 / 403,200 = 68.95% and 278,000 / 350,000 = 79.43%." },
+    { name:"Expected output", f:["Expected output = effective capacity × efficiency"],
+      use:"Planning ahead: whether the capacity you have will cover the forecast.",
+      ex:"Effective capacity 175,000 rolls and an expected efficiency of 80%: 175,000 × 0.80 = 140,000 rolls." }
+  ]},
+  { name:"Bottleneck analysis", items:[
+    { name:"Bottleneck time and capacity", f:["Bottleneck time = process time of the slowest workstation","Capacity per hour = 3,600 seconds (or 60 minutes) / bottleneck time","n identical parallel stations: effective process time = process time / n"],
+      use:"Finding what limits output. Only an improvement at the bottleneck raises system capacity.",
+      watch:"With parallel stations, divide the time by the number of stations before comparing.",
+      ex:"Two sandwich lines with a 40-second toaster each: 40 / 2 = 20 s. Wrapping takes 37.5 s and is the bottleneck: 3,600 / 37.5 = 96 sandwiches per hour." },
+    { name:"Throughput time", f:["Throughput time = time along the longest path through the process, with no waiting"],
+      watch:"With simultaneous paths, take the longest path, not the sum of all steps.",
+      ex:"Dentist: the X-ray path takes 27 minutes and the cleaning path 46 minutes, so throughput time = 46 minutes. The hygienist (24 minutes) is the bottleneck: 60 / 24 = 2.5 patients per hour." }
+  ]},
+  { name:"Break-even analysis", items:[
+    { name:"Break-even, single product", f:["BEP<sub>x</sub> = F / (P − V)","BEP<sub>$</sub> = F / (1 − V/P)"],
+      vars:"F = fixed costs; P = price per unit; V = variable cost per unit; P − V = contribution per unit",
+      use:"The volume (units or sales dollars) at which total revenue equals total cost.",
+      ex:"F = $10,000, V = $1.50 + $0.75 = $2.25, P = $4.00: BEP<sub>x</sub> = 10,000 / 1.75 = 5,714 units; BEP<sub>$</sub> = 10,000 / 0.4375 = $22,857." },
+    { name:"Break-even, several products", f:["BEP<sub>$</sub> = F / Σ [ (1 − V<sub>i</sub> / P<sub>i</sub>) × W<sub>i</sub> ]"],
+      vars:"W<sub>i</sub> = product i’s share of total sales dollars",
+      watch:"Weight each product by its share of sales dollars, not units, and keep F and sales in the same period.",
+      ex:"Le Bistro, F = $3,000 a month ($36,000 a year): sandwich 0.40 × 0.621, drinks 0.67 × 0.186, potato 0.50 × 0.193, total ≈ 0.47. BEP<sub>$</sub> = 36,000 / 0.47 ≈ $76,596 a year." }
+  ]},
+  { name:"Evaluating capacity investments", items:[
+    { name:"Expected monetary value of capacity options", f:["EMV = Σ (probability × payoff)"],
+      ex:"Southern Hospital Supplies, P(favorable) = 0.4: large plant 0.4 · 100,000 + 0.6 · (−90,000) = −$14,000; medium 0.4 · 60,000 + 0.6 · (−10,000) = $18,000; small $13,000. Build the medium plant." },
+    { name:"Present value and net present value", f:["P = F / (1 + i)<sup>N</sup> = F × X","Equal yearly receipts: S = R × X (X from the annuity table)","NPV = present value of all inflows − investment"],
+      vars:"F = future value; i = interest rate; N = number of years; X = present value factor; R = yearly receipt; S = present value of the series",
+      use:"Comparing investments whose cash flows come at different times: choose the higher NPV.",
+      ex:"$7,000 a year for 5 years at 6% (X = 4.212): S = 7,000 × 4.212 = $29,484." }
+  ]}
+  ]},
+{ id:"lp", ch:"Module B", title:"Linear programming", ready:true,
+  groups:[
+  { name:"Formulation and graphical solution", items:[
+    { name:"LP model", f:["Maximize (or minimize) Z = c<sub>1</sub>X<sub>1</sub> + c<sub>2</sub>X<sub>2</sub>","subject to a<sub>11</sub>X<sub>1</sub> + a<sub>12</sub>X<sub>2</sub> ≤ b<sub>1</sub>, …   and   X<sub>1</sub>, X<sub>2</sub> ≥ 0"],
+      vars:"X = decision variables; c = profit or cost per unit; a = resource use per unit; b = resource available",
+      use:"Allocating limited capacity (hours, materials, staff) to products or activities.",
+      watch:"Define the decision variables first and state their units; remember the non-negativity constraints.",
+      ex:"Shader Electronics: maximize 7X<sub>1</sub> + 5X<sub>2</sub> subject to 4X<sub>1</sub> + 3X<sub>2</sub> ≤ 240 (electronics hours) and 2X<sub>1</sub> + X<sub>2</sub> ≤ 100 (assembly hours)." },
+    { name:"Corner-point method", f:["Evaluate Z at every corner of the feasible region; the best value is optimal"],
+      use:"Solving a two-variable LP by hand.",
+      ex:"Corners (0, 0) = $0, (50, 0) = $350, (30, 40) = $410 and (0, 80) = $400. Make 30 of X<sub>1</sub> and 40 of X<sub>2</sub> for $410." },
+    { name:"Shadow price", f:["Shadow price = change in Z / one more unit of a resource"],
+      use:"The most worth paying for one more hour (or unit) of a binding constraint.",
+      watch:"It is valid only within the range where the same constraints stay binding.",
+      ex:"Raising assembly hours from 100 to 110 lifts profit from $410 to $415: a shadow price of $0.50 per hour." }
+  ]}
+  ]},
+{ id:"location", ch:"Ch. 8", title:"Location strategies", ready:true,
+  groups:[
+  { name:"Location methods", items:[
+    { name:"Factor-rating method", f:["Score of a site = Σ (weight<sub>i</sub> × score<sub>i</sub>)"],
+      use:"Comparing sites on many factors, including intangible ones such as labor attitude or quality of life.",
+      ex:"Dijon vs. Copenhagen (scores out of 100): France 70.35, Denmark 68.00, so France is preferred. A small change in weights could reverse it." },
+    { name:"Locational cost–volume analysis", f:["Total cost = F + V × volume","Crossover volume = (F<sub>2</sub> − F<sub>1</sub>) / (V<sub>1</sub> − V<sub>2</sub>)"],
+      use:"Choosing the location with the lowest total cost at the expected volume.",
+      ex:"At 2,000 units: Athens $30,000 + $75 = $180,000; Brussels $60,000 + $45 = $150,000; Lisbon $110,000 + $25 = $160,000. Choose Brussels. Crossovers: Athens/Brussels 1,000 units; Brussels/Lisbon 2,500 units." },
+    { name:"Center-of-gravity method", f:["x = Σ x<sub>i</sub> Q<sub>i</sub> / Σ Q<sub>i</sub>","y = Σ y<sub>i</sub> Q<sub>i</sub> / Σ Q<sub>i</sub>"],
+      vars:"x<sub>i</sub>, y<sub>i</sub> = map coordinates of location i; Q<sub>i</sub> = quantity shipped to or from location i",
+      use:"Finding a central site for one distribution center that serves several locations.",
+      watch:"Weight by quantity: a large customer pulls the center towards it.",
+      ex:"Quain’s stores: x = 400,000 / 6,000 = 66.7 and y = 560,000 / 6,000 = 93.3, which is near central Ohio." }
+  ]}
+  ]},
+{ id:"layout", ch:"Ch. 9", title:"Layout strategies", ready:true,
+  groups:[
+  { name:"Process-oriented layout", items:[
+    { name:"Material handling cost", f:["Cost = Σ<sub>i</sub> Σ<sub>j</sub> X<sub>ij</sub> C<sub>ij</sub>"],
+      vars:"X<sub>ij</sub> = number of loads moved from department i to j; C<sub>ij</sub> = cost to move one load between i and j",
+      use:"Comparing layouts: departments with heavy flows between them should be placed next to each other.",
+      ex:"Walters Company: $1 per load between adjacent and $2 between non-adjacent departments. The first layout costs $570; moving departments so that heavy flows are adjacent cuts it to $480." }
+  ]},
+  { name:"Work cells and assembly lines", items:[
+    { name:"Takt time and workers required", f:["Takt time = total work time available / units required","Workers required = total operation time / takt time"],
+      use:"Setting the pace of a work cell to match customer demand.",
+      watch:"Round the number of workers up.",
+      ex:"7.5 hours a day and demand of 600 units: takt time = 450 / 600 = 0.75 minute (45 seconds). With 140 seconds of work per unit and a 48-second takt: 140 / 48 = 2.92, so 3 workers." },
+    { name:"Cycle time and minimum number of workstations", f:["Cycle time = production time available per day / units required per day","Minimum workstations = Σ task times / cycle time"],
+      watch:"Round the minimum number of workstations up to the next whole number.",
+      ex:"Wing component: 480 minutes and 40 units a day give a cycle time of 12 minutes. Tasks total 65 minutes: 65 / 12 = 5.42, so at least 6 stations." },
+    { name:"Line efficiency and idle time", f:["Efficiency = Σ task times / (actual number of workstations × largest assigned cycle time)","Idle time = (actual workstations × largest cycle time) − Σ task times"],
+      ex:"Six stations with a 12-minute cycle: efficiency = 65 / (6 × 12) = 90.3%; idle time = 72 − 65 = 7 minutes per cycle." }
+  ]}
+  ]},
+{ id:"transport", ch:"Module C", title:"Transportation model", ready:true,
+  groups:[
+  { name:"Initial solution", items:[
+    { name:"Total shipping cost", f:["Total cost = Σ (units shipped on a route × cost per unit on that route)"],
+      vars:"Supplies (factory capacities) and demands (warehouse requirements) must balance",
+      watch:"If supply and demand differ, add a dummy source or dummy destination with zero costs.",
+      ex:"Northwest-corner solution for Arizona Plumbing: 100 · 5 + 200 · 8 + 100 · 4 + 100 · 7 + 200 · 5 = $4,200." },
+    { name:"Northwest-corner rule", f:["Start top left; use up each row’s supply before moving down and each column’s demand before moving right"],
+      use:"A quick feasible starting solution, though not necessarily a cheap one." },
+    { name:"Intuitive lowest-cost method", f:["Fill the cheapest open cell as far as possible, cross off the row or column that is used up, repeat"],
+      ex:"Arizona Plumbing: 3 · 100 + 3 · 100 + 4 · 200 + 9 · 300 = $4,100, cheaper than the northwest-corner start." }
+  ]},
+  { name:"Improving the solution", items:[
+    { name:"Stepping-stone improvement index", f:["Index = Σ costs in + cells − Σ costs in − cells along the closed path"],
+      use:"Testing each unused cell. A negative index means shipping on that route lowers total cost.",
+      watch:"Pick the most negative index; move the smallest quantity found in a − cell around the path. Stop when no index is negative.",
+      ex:"Fort Lauderdale–Albuquerque: 9 − 7 + 4 − 8 = −$2 per unit. Moving 100 units gives a new total of $4,000." },
+    { name:"Degeneracy check", f:["Occupied cells = number of rows + number of columns − 1"],
+      watch:"If fewer cells are used, the solution is degenerate; place a zero in one unused cell before applying the stepping-stone method.",
+      ex:"3 factories and 3 warehouses: 3 + 3 − 1 = 5 cells must be used." }
+  ]}
+  ]},
+{ id:"inventory", ch:"Ch. 12", title:"Inventory management", ready:true,
+  guide:{ title:"Which inventory model?", items:[
+    "Demand is steady and you order repeatedly: <b>EOQ</b> for how much, <b>ROP</b> for when.",
+    "The order arrives gradually from your own production: <b>production order quantity</b>.",
+    "The supplier gives a lower price for larger orders: <b>quantity discount</b> model.",
+    "You order only once for a single selling period (perishable, seasonal): <b>newsvendor</b>.",
+    "You review stock at fixed intervals instead of continuously: <b>fixed-period (P) system</b>.",
+    "Demand or lead time is uncertain: add <b>safety stock</b> to the reorder point or target level."]},
+  groups:[
+  { name:"How much to order", items:[
+    { name:"Economic order quantity (EOQ)", f:["Q* = √(2DS / H)"], sim:"../inventory/eoq-cost-curves.html",
+      vars:"D = annual demand; S = ordering or setup cost per order; H = holding cost per unit per year (H = I × P)",
+      use:"Demand is known and constant, the order arrives all at once, and there are no quantity discounts.",
+      watch:"D and H must use the same time unit (both per year).",
+      ex:"D = 1,000, S = $10, H = $0.50: Q* = √(2 · 1,000 · 10 / 0.50) = 200 units." },
+    { name:"Orders, time between orders and total cost", f:["N = D / Q*","Time between orders = working days per year / N","TC = (D / Q) S + (Q / 2) H"], sim:"../inventory/eoq-cost-curves.html",
+      use:"At Q* the ordering cost equals the holding cost, and total cost is flat near Q*.",
+      ex:"N = 1,000 / 200 = 5 orders; with 250 working days, an order every 50 days. TC = 5 · 10 + 100 · 0.50 = $100." },
+    { name:"Production order quantity", f:["Q*<sub>p</sub> = √(2DS / [H (1 − d/p)])","I<sub>max</sub> = Q (1 − d/p)"],
+      vars:"d = daily demand rate; p = daily production rate",
+      use:"Stock builds up gradually while production runs, as in your own production.",
+      ex:"D = 1,000, S = $10, H = $0.50, d = 4, p = 8: Q*<sub>p</sub> = √(20,000 / 0.25) ≈ 283 units." },
+    { name:"Quantity discount (all-units)", f:["Q* = √(2DS / (I P)) at each price","TC = (D / Q) S + (Q / 2) I P + P D"],
+      use:"The unit price P falls when you order more.",
+      watch:"If Q* is below the quantity needed for a price, raise it to that break point, then compare total costs including P × D.",
+      ex:"D = 5,200, S = $200, I = 28%: at $98, Q* ≈ 275 and TC = $517,155; at $96 (1,500 units) TC = $520,053. Order 275 at $98." }
+  ]},
+  { name:"When to order", items:[
+    { name:"Reorder point, constant demand and lead time", f:["ROP = d × L"], sim:"../inventory/inventory-replenishment.html",
+      vars:"d = daily demand; L = lead time in days",
+      ex:"d = 40 units/day and L = 3 days: ROP = 120 units." },
+    { name:"Safety stock and ROP with variable demand", f:["SS = Z × σ<sub>d</sub> × √L","ROP = d̄ × L + Z × σ<sub>d</sub> × √L"], sim:"../inventory/inventory-replenishment.html",
+      vars:"Z = standard normal value for the service level; σ<sub>d</sub> = standard deviation of daily demand",
+      watch:"Multiply σ<sub>d</sub> by √L, not by L.",
+      ex:"d̄ = 15, σ<sub>d</sub> = 5, L = 2, 90% (Z = 1.28): ROP = 30 + 1.28 · 5 · √2 ≈ 39." },
+    { name:"ROP with variable lead time", f:["ROP = d × L̄ + Z × d × σ<sub>LT</sub>"],
+      vars:"L̄ = average lead time; σ<sub>LT</sub> = standard deviation of lead time",
+      ex:"d = 10, L̄ = 6, σ<sub>LT</sub> = 1, 98% (Z = 2.055): ROP = 60 + 20.55 ≈ 81." },
+    { name:"ROP when demand and lead time both vary", f:["σ<sub>dLT</sub> = √(L̄ σ<sub>d</sub>² + d̄² σ<sub>LT</sub>²)","ROP = d̄ × L̄ + Z × σ<sub>dLT</sub>"],
+      ex:"d̄ = 150, σ<sub>d</sub> = 16, L̄ = 5, σ<sub>LT</sub> = 1, 95%: σ<sub>dLT</sub> ≈ 154.2, ROP = 750 + 1.645 · 154.2 ≈ 1,004." }
+  ]},
+  { name:"Single period and periodic review", items:[
+    { name:"Newsvendor (single-period) model", f:["C<sub>s</sub> = price − cost;  C<sub>o</sub> = cost − salvage value","SL = C<sub>s</sub> / (C<sub>s</sub> + C<sub>o</sub>)","Q* = μ + Z × σ, with Z for the area SL"], sim:"../inventory/newsvendor-service-level.html",
+      use:"One order for one selling period; leftovers lose value.",
+      ex:"Papers sell for $1.25, cost $0.70, credit $0.30: SL = 0.55 / 0.95 = 0.579, Z = 0.199, Q* = 120 + 0.199 · 15 ≈ 123." },
+    { name:"Fixed-period (P) system", f:["T = d̄ (P + L) + Z × σ<sub>d</sub> × √(P + L)","Q = T − on hand − on order + backorders"], sim:"../inventory/inventory-record-systems.html",
+      vars:"T = target level; P = review period in days",
+      watch:"Safety stock must cover the review period plus the lead time, P + L, not L alone.",
+      ex:"d̄ = 8, σ<sub>d</sub> = 2.8, P = 7, L = 2, 95%: T = 72 + 1.645 · 2.8 · 3 ≈ 86." },
+    { name:"ABC analysis", f:["Annual value = D × P per item, ranked from high to low"],
+      use:"A items (about 70 to 80% of value, 15% of items) get the tightest control and most frequent counts." }
+  ]}
+  ]},
+{ id:"aggregate", ch:"Ch. 13", title:"S&OP and aggregate planning", ready:false },
+{ id:"scheduling", ch:"Ch. 15", title:"Scheduling", ready:false },
+{ id:"quality", ch:"Ch. 6, 16", title:"Quality and lean", ready:false }
+];
+
+const NOTATION = [
+  ["F, V, P","Fixed cost; variable cost per unit; price per unit","Capacity, location"],
+  ["BEP<sub>x</sub>, BEP<sub>$</sub>","Break-even point in units and in sales dollars","Capacity"],
+  ["W<sub>i</sub>","Share of total sales dollars of product i","Capacity"],
+  ["F, P, i, N, X","Future value; present value; interest rate; years; present value factor","Capacity (investment)"],
+  ["X<sub>1</sub>, X<sub>2</sub>, Z","Decision variables; value of the objective function","Linear programming"],
+  ["x<sub>i</sub>, y<sub>i</sub>, Q<sub>i</sub>","Coordinates of location i; quantity shipped to or from it","Location"],
+  ["X<sub>ij</sub>, C<sub>ij</sub>","Loads moved from department i to j; cost per load","Layout"],
+  ["A<sub>t</sub>, F<sub>t</sub>","Actual demand and forecast in period t","Forecasting"],
+  ["α, β","Smoothing constants for the average and the trend","Forecasting"],
+  ["T<sub>t</sub>","Smoothed trend in period t","Forecasting"],
+  ["a, b, r","Intercept, slope and correlation coefficient of a regression line","Forecasting"],
+  ["D, d","Annual demand; daily demand (d = D / working days)","Inventory"],
+  ["S","Ordering or setup cost per order","Inventory"],
+  ["H, I, P","Holding cost per unit per year; holding cost as % of price; unit price (H = I × P)","Inventory"],
+  ["P","Review period in days (P system)","Inventory"],
+  ["T","Target level (P system)","Inventory"],
+  ["Q, Q*","Order quantity; optimal order quantity","Inventory"],
+  ["L, L̄","Lead time in days; average lead time","Inventory"],
+  ["p","Daily production rate","Inventory"],
+  ["Z","Standard normal value for the service level","Inventory"],
+  ["σ<sub>d</sub>, σ<sub>LT</sub>, σ<sub>dLT</sub>","Std. deviation of daily demand, of lead time and of demand during lead time","Inventory"],
+  ["C<sub>s</sub>, C<sub>o</sub>, SL","Cost of shortage, cost of overage, service level","Inventory"],
+  ["μ, σ","Mean and standard deviation of demand in the period (newsvendor)","Inventory"]
+];
+
+const $ = id => document.getElementById(id);
+let active = "all";
+const strip = h => h.replace(/<[^>]+>/g, "");
+function card(it){
+  return `<article class="card" data-text="${strip([it.name,...it.f,it.vars||"",it.use||"",it.watch||"",it.ex||""].join(" ")).toLowerCase()}">
+    <div class="ctop"><span class="cname">${it.name}</span>${it.sim?`<a class="sim" href="${it.sim}">Try it in the simulation →</a>`:""}</div>
+    <div class="f">${it.f.map(x=>`<div>${x}</div>`).join("")}</div>
+    ${it.vars?`<p class="vars">${it.vars}</p>`:""}
+    ${it.use?`<p class="use">${it.use}</p>`:""}
+    ${it.watch?`<p class="watch">${it.watch}</p>`:""}
+    ${it.ex?`<details class="ex"><summary>Worked example</summary><div>${it.ex}</div></details>`:""}
+  </article>`;
+}
+function render(){
+  const q = $("q").value.trim().toLowerCase();
+  let html = "", shown = 0;
+  for (const b of BLOCKS){
+    if (!b.ready || (active !== "all" && active !== b.id)) continue;
+    let body = "";
+    if (b.guide && !q) body += `<div class="guide"><h4>${b.guide.title}</h4><ul>${b.guide.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`;
+    for (const g of b.groups){
+      const items = g.items.filter(it => !q || strip([it.name,...it.f,it.vars||"",it.use||"",it.watch||"",it.ex||""].join(" ")).toLowerCase().includes(q));
+      if (!items.length) continue;
+      shown += items.length;
+      body += `<h3 class="group">${g.name}</h3>` + items.map(card).join("");
+    }
+    if (body) html += `<section class="block" id="${b.id}"><div class="bhead"><span class="wk">${b.ch}</span><h2>${b.title}</h2><span class="bnote">${b.note||""}</span></div>${body}</section>`;
+  }
+  const soon = BLOCKS.filter(b=>!b.ready).map(b=>`${b.title} (${b.ch})`).join(" · ");
+  if (!q && active==="all" && soon) html += `<section class="block"><p class="soonlist">Coming after each lecture: ${soon}</p></section>`;
+  if (!shown) html += `<p class="empty">No formulas match “${$("q").value}”.</p>`;
+  $("sheet").innerHTML = html;
+}
+$("chips").innerHTML = `<button class="chip" aria-pressed="true" data-id="all">All topics</button>` +
+  BLOCKS.map(b => b.ready ? `<button class="chip" aria-pressed="false" data-id="${b.id}">${b.title}</button>`
+                          : `<span class="chip soon" title="Added after the lecture">${b.title}</span>`).join("");
+$("chips").addEventListener("click", e => { const c = e.target.closest("button.chip"); if (!c) return;
+  active = c.dataset.id; document.querySelectorAll("button.chip").forEach(x => x.setAttribute("aria-pressed", x===c)); render(); });
+$("q").addEventListener("input", render);
+$("test").addEventListener("change", e => { $("sheet").classList.toggle("hideF", e.target.checked); document.querySelectorAll(".f.shown").forEach(f=>f.classList.remove("shown")); });
+$("sheet").addEventListener("click", e => { const f = e.target.closest(".hideF .f"); if (f) f.classList.toggle("shown"); });
+$("print").addEventListener("click", () => window.print());
+$("ntable").tBodies[0].innerHTML = NOTATION.map(r => `<tr><td class="m">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("");
+render();
+</script>
+<script src="../shared/fullscreen.js"></script>
+</body>
+</html>

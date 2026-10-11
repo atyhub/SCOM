@@ -76,10 +76,10 @@ const TOPICS = [
   {
     title: "Inventory Management",
     items: [
-      { title: "Inventory Record Systems", text: "ABC analysis, record accuracy and cycle counting.",                               file: "inventory-record-systems.html", live: true },
-      { title: "EOQ Cost Curves",          text: "Holding, ordering and total cost against order quantity. See why the EOQ is robust.", file: "eoq-cost-curves.html",       live: true },
-      { title: "Inventory Replenishment",  text: "Animated sawtooth: reorder point, lead time, safety stock and stockouts under uncertain demand.", file: "inventory-replenishment.html", live: true },
-      { title: "Newsvendor Service Level", text: "Single-period decisions: critical ratio, optimal order quantity and expected profit.", file: "newsvendor-service-level.html", live: true }
+      { title: "Inventory Record Systems", text: "ABC analysis, record accuracy and cycle counting.",                               file: "inventory/inventory-record-systems.html", live: true },
+      { title: "EOQ Cost Curves",          text: "Holding, ordering and total cost against order quantity. See why the EOQ is robust.", file: "inventory/eoq-cost-curves.html",       live: true },
+      { title: "Inventory Replenishment",  text: "Animated sawtooth: reorder point, lead time, safety stock and stockouts under uncertain demand.", file: "inventory/inventory-replenishment.html", live: true },
+      { title: "Newsvendor Service Level", text: "Single-period decisions: critical ratio, optimal order quantity and expected profit.", file: "inventory/newsvendor-service-level.html", live: true }
     ]
   }
 ];
@@ -96,12 +96,6 @@ document.getElementById("topics").innerHTML = TOPICS.map(t => `
     </div>
   </section>`).join("");
 </script>
-<script>
-(()=>{let d=document;try{if(parent!==window&&parent.__scomShell)d=parent.document}catch(e){}
-const b=document.querySelectorAll(".fs-btn");if(!d.fullscreenEnabled){return;}
-const upd=()=>b.forEach(x=>x.textContent=d.fullscreenElement?"✕ Exit full screen":"⛶ Full screen");
-b.forEach(x=>{x.hidden=false;x.addEventListener("click",()=>d.fullscreenElement?d.exitFullscreen():d.documentElement.requestFullscreen().catch(()=>{}));});
-d.addEventListener("fullscreenchange",upd);addEventListener("pagehide",()=>d.removeEventListener("fullscreenchange",upd));upd();})();
-</script>
+<script src="shared/fullscreen.js"></script>
 </body>
 </html>
