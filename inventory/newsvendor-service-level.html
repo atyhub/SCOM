@@ -91,6 +91,25 @@ th:first-child,td:first-child{text-align:left;color:var(--muted);font-family:var
 td{font-family:var(--f-mono)} th{font-weight:600}
 #costErr:empty{display:none}
 .pbox{overflow-x:auto}
+.compare{overflow-x:auto}
+svg.narrow text{font-size:17px}
+#dchart,#cchart{min-width:0}
+svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+@media (max-width:520px){.compare table{font-size:13px}.compare th,.compare td{padding:6px 5px}.compare td:first-child{white-space:normal}}
+.cases{display:grid;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 13px var(--f-body);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip:hover{opacity:1;border-color:var(--ink)}
+.case-note{margin:0;font-size:14px;color:var(--muted);max-width:75ch}
+.case-note b{color:var(--ink)}
+.pctl{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end}
+.pctl .field{width:150px}
+.pctl select{font:500 15px var(--f-mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.verdict{margin:0;font-weight:500;max-width:75ch}
+.verdict:empty{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -116,6 +135,12 @@ td{font-family:var(--f-mono)} th{font-weight:600}
       <h3>Choosing Q with costs</h3>
       <p>Each unit short costs <b>Cs</b>, the cost of shortage (lost margin plus any goodwill loss). Each unit left over costs <b>Co</b>, the cost of overage (purchase cost minus salvage). The best Q sets the service level equal to the <b>critical ratio</b> <code>Cs / (Cs + Co)</code>, which balances the two risks.</p>
     </div>
+  </section>
+
+  <section class="cases" aria-labelledby="caseH">
+    <h2 id="caseH">Choose a case</h2>
+    <div class="chips" id="chips" role="group" aria-label="Cases"></div>
+    <p class="case-note" id="caseNote"></p>
   </section>
 
   <section class="chart" aria-label="Demand distribution chart">
@@ -198,6 +223,36 @@ td{font-family:var(--f-mono)} th{font-weight:600}
     <div class="pbox"><svg id="pchart" viewBox="0 0 900 250" role="img" aria-label="Expected profit as a function of Q"></svg></div>
     <p class="note">Expected units short L(Q) = σ·[φ(Z) − Z(1 − Φ(Z))]. Expected sales = μ − L. Expected leftover = Q − sales. Expected profit = p·sales + v·leftover − c·Q − g·L. In Excel, Q* is <code>=NORM.INV(Cs/(Cs+Co), μ, σ)</code>.</p>
   </section>
+
+  <section class="cost" aria-labelledby="playH">
+    <div style="display:grid;gap:4px">
+      <h2 id="playH">Play a season</h2>
+      <p class="sub">The formula gives the best Q <b>on average</b>. Here you live through it: choose your stock level, then let random demand arrive one <span class="perName">day</span> at a time. The same demand is replayed with Q*, so you can compare your result with the optimal policy.</p>
+    </div>
+    <div class="pctl">
+      <div class="field"><label for="pq">Your stock level, Q</label><input type="number" id="pq" step="1"></div>
+      <div class="field"><label for="pn">Number of <span class="perName">day</span>s</label><select id="pn"><option>10</option><option selected>30</option><option>60</option></select></div>
+      <button type="button" id="play">▶ Play</button>
+      <button type="button" class="ghost" id="skip">Skip to the end</button>
+    </div>
+    <div class="legend"><span><i style="background:var(--fill)"></i>Sold</span><span><i style="background:var(--bad)"></i>Lost sales (demand above Q)</span><span><i style="border:1.5px dashed var(--marker)"></i>Left over (Q above demand)</span><span><i style="background:var(--opt)"></i>Q*</span></div>
+    <div class="pbox"><svg id="dchart" viewBox="0 0 900 250" role="img" aria-label="Demand in each period against your stock level"></svg></div>
+    <div class="compare">
+      <table>
+        <thead><tr><th></th><th>Your Q = <span id="rQ">—</span></th><th>Q* = <span id="rQs">—</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="perName">Day</span>s with a stockout</td><td id="r_so1">—</td><td id="r_so2">—</td></tr>
+          <tr><td>Service level achieved</td><td id="r_sl1">—</td><td id="r_sl2">—</td></tr>
+          <tr><td>Units left over</td><td id="r_i1">—</td><td id="r_i2">—</td></tr>
+          <tr><td>Units short</td><td id="r_l1">—</td><td id="r_l2">—</td></tr>
+          <tr><td>Total profit</td><td id="r_p1">—</td><td id="r_p2" class="hl">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pbox"><svg id="cchart" viewBox="0 0 900 200" role="img" aria-label="Running profit gap between Q* and your Q"></svg></div>
+    <p class="verdict" id="verdict" aria-live="polite"></p>
+    <p class="note">Service level achieved = share of <span class="perName">day</span>s in which demand did not exceed Q. Profit in each <span class="perName">day</span> = p × units sold + v × units left over − c × Q − g × units short. Demand is drawn from a normal distribution with mean μ and standard deviation σ, rounded to whole units.</p>
+  </section>
   <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="../home.html">← All simulations</a></nav>
 </div>
 
@@ -237,7 +292,7 @@ function draw(){
     const tx=el("text",{x:X(t),y:H-B+20,"text-anchor":"middle"});tx.textContent=+t.toFixed(2);
   }
   el("line",{x1:L,x2:W-R,y1:H-B,y2:H-B,stroke:v("--muted"),"stroke-width":1});
-  const xl=el("text",{x:W-R,y:H-4,"text-anchor":"end"});xl.textContent="daily demand (units)";
+  const xl=el("text",{x:W-R,y:H-4,"text-anchor":"end"});xl.textContent=`demand per ${CASE.per} (${CASE.unit})`;
   // shaded area
   const qc=Math.min(Math.max(Q,xmin),xmax);
   let d=`M${X(xmin)},${Y(0)}`;
@@ -280,6 +335,7 @@ function update(fromTarget){
   computeCosts();
   draw();
   drawProfit();
+  if(typeof resetPlay==="function")resetPlay();
 }
 function syncRange(){
   const q=$("q");q.min=Math.floor(mu-4*sd);q.max=Math.ceil(mu+4*sd);q.step=sd<5?0.1:1;
@@ -360,8 +416,8 @@ function drawProfit(){
     const t=pe("text",{x:pL-6,y:Y(y)+4,"text-anchor":"end"});t.textContent=+y.toFixed(2);}
   const step=niceStep(xmax-xmin);
   for(let t=Math.ceil(xmin/step)*step;t<=xmax+1e-9;t+=step){const tx=pe("text",{x:X(t),y:pB+20,"text-anchor":"middle"});tx.textContent=+t.toFixed(2);}
-  const yl=pe("text",{x:pL,y:pT-8});yl.textContent="expected profit per day";
-  const xl=pe("text",{x:PW-pR,y:pB+38,"text-anchor":"end"});xl.textContent="stock level Q (units)";
+  const yl=pe("text",{x:pL,y:pT-8});yl.textContent=`expected profit per ${CASE.per}${CASE.cur?" ("+CASE.cur+")":""}`;
+  const xl=pe("text",{x:PW-pR,y:pB+38,"text-anchor":"end"});xl.textContent=`stock level Q (${CASE.unit})`;
   pe("path",{d:"M"+pts.map(p=>`${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" L"),fill:"none",stroke:v("--curve"),"stroke-width":2});
   const mq=metrics(cm.qs).P,mc=metrics(Q).P;
   if(cm.qs>=xmin&&cm.qs<=xmax){
@@ -375,7 +431,123 @@ $("useQs").addEventListener("click",()=>{if(!cm)return;Q=sd>=5?Math.round(cm.qs)
 const redraw=()=>{draw();drawProfit();};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
 new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
-syncRange();update();newQuestion();
+// --- cases ---
+const CASES=[
+ {id:"basic",name:"Textbook example",unit:"units",per:"day",cur:"",mu:80,sd:10,p:12,c:5,v:1,g:0,
+  text:"A generic product, used in the guide and the quiz. Price 12, cost 5, salvage value 1."},
+ {id:"buns",name:"Bakery: cinnamon buns",unit:"buns",per:"day",cur:"NOK",mu:120,sd:25,p:45,c:12,v:0,g:0,
+  text:"Baked fresh every morning for NOK 12 and sold for NOK 45. Buns left at closing time are given away, so they are worth nothing."},
+ {id:"salmon",name:"Fish counter: fresh salmon",unit:"kg",per:"day",cur:"NOK",mu:60,sd:12,p:289,c:160,v:60,g:0,
+  text:"Bought at the morning auction for NOK 160 per kg and sold for NOK 289 per kg. Fish left at closing goes into fish cakes, worth NOK 60 per kg."},
+ {id:"trees",name:"Christmas trees in Stavanger",unit:"trees",per:"season",cur:"NOK",mu:400,sd:80,p:499,c:300,v:0,g:0,
+  text:"One order before December at NOK 300 per tree, sold for NOK 499. Trees still unsold on Christmas Eve are worth nothing."},
+ {id:"fest",name:"Festival T-shirts",unit:"shirts",per:"festival",cur:"NOK",mu:500,sd:120,p:350,c:90,v:40,g:0,
+  text:"Printed once before a summer festival at NOK 90 and sold for NOK 350. Leftover shirts are sold to an outlet for NOK 40."}
+];
+let CASE=CASES[0];
+$("chips").innerHTML=CASES.map(c=>`<button type="button" class="chip" data-id="${c.id}" aria-pressed="${c===CASE}">${c.name}</button>`).join("");
+function caseNote(){if(!cm){$("caseNote").innerHTML=CASE.text;return;}
+  const lo=cm.cr<0.5;
+  $("caseNote").innerHTML=`${CASE.text} Critical ratio = <b>${cm.cr.toFixed(2)}</b>, so the best order is <b>${lo?"below":"above"} mean demand</b>${lo?": a unit left over costs more than a unit short.":": a unit short costs more than a unit left over."}`;}
+function setCase(c){CASE=c;
+  document.querySelectorAll("#chips .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.id===c.id));
+  $("mu").value=c.mu;$("sd").value=c.sd;$("price").value=c.p;$("cost").value=c.c;$("salv").value=c.v;$("good").value=c.g;
+  mu=c.mu;sd=c.sd;Q=Math.round(c.mu);
+  document.querySelectorAll(".perName").forEach(e=>e.textContent=/^[A-Z]/.test(e.textContent)?c.per[0].toUpperCase()+c.per.slice(1):c.per);
+  syncRange();update();newQuestion();caseNote();}
+$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b)setCase(CASES.find(c=>c.id===b.dataset.id));});
+["price","cost","salv","good","mu","sd"].forEach(id=>$(id).addEventListener("change",()=>caseNote()));
+
+// --- play a season ---
+let run=null,timer=null;
+const randn=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+const money0=x=>(x<0?"−":"")+Math.round(Math.abs(x)).toLocaleString();
+const roundQ=q=>sd>=5?Math.round(q):Math.round(q*10)/10;
+function outcome(q,D){const sold=Math.min(D,q),left=Math.max(q-D,0),short=Math.max(D-q,0);
+  return {sold,left,short,P:cm.p*sold+cm.v*left-cm.c*q-cm.g*short};}
+function resetPlay(){clearInterval(timer);timer=null;run=null;$("pq").value=fmtQ(Q);$("verdict").textContent="";
+  ["r_so1","r_so2","r_sl1","r_sl2","r_i1","r_i2","r_l1","r_l2","r_p1","r_p2"].forEach(id=>$(id).textContent="—");
+  $("rQ").textContent=fmtQ(Q);$("rQs").textContent=cm?fmtQ(roundQ(cm.qs)):"—";drawPlay();}
+function startPlay(){
+  if(!cm){$("verdict").textContent="Enter valid costs first.";return;}
+  clearInterval(timer);
+  const n=+$("pn").value, qs=roundQ(cm.qs);
+  const D=Array.from({length:n},()=>Math.max(0,Math.round(mu+sd*randn())));
+  run={D,n,shown:0,q:Q,qs};
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){run.shown=n;finishPlay();return;}
+  timer=setInterval(()=>{run.shown++;drawPlay();tally();if(run.shown>=n)finishPlay();},Math.max(40,2400/n));
+}
+function finishPlay(){clearInterval(timer);timer=null;run.shown=run.n;drawPlay();tally();
+  const a=sum(run.q),b=sum(run.qs),per=CASE.per+"s";
+  const diff=b.P-a.P, cur=CASE.cur?CASE.cur+" ":"";
+  $("verdict").textContent = Math.abs(diff)<1e-9 ? `Your Q equals Q*, so both policies earned the same.`
+    : diff>0 ? `Over these ${run.n} ${per}, Q* earned ${cur}${money0(diff)} more than your Q. Play again: the gap changes from run to run, but on average Q* always wins.`
+    : `This time your Q earned ${cur}${money0(-diff)} more than Q*. That can happen in a short run of random demand; play again a few times and see who wins on average.`;}
+function sum(q){const r={so:0,i:0,l:0,P:0},k=run?run.shown:0;
+  for(let t=0;t<k;t++){const o=outcome(q,run.D[t]);r.so+=o.short>0;r.i+=o.left;r.l+=o.short;r.P+=o.P;}r.k=k;return r;}
+function tally(){if(!run)return;const a=sum(run.q),b=sum(run.qs),f=x=>Number.isInteger(x)?x:x.toFixed(1);
+  [[a,1],[b,2]].forEach(([r,i])=>{$("r_so"+i).textContent=`${r.so} of ${r.k}`;$("r_sl"+i).textContent=r.k?pct(1-r.so/r.k):"—";
+    $("r_i"+i).textContent=f(r.i);$("r_l"+i).textContent=f(r.l);$("r_p"+i).textContent=money0(r.P);});}
+function drawPlay(){
+  const ds=$("dchart"),cs=$("cchart");ds.textContent="";cs.textContent="";
+  const css=getComputedStyle(document.documentElement),v=n=>css.getPropertyValue(n).trim();
+  const de=(t,a)=>el(t,a,ds),ce=(t,a)=>el(t,a,cs);
+  const n=run?run.n:+$("pn").value, narrow=ds.parentElement.clientWidth<560, PW=narrow?560:900,pL=narrow?66:56,pR=narrow?10:20;
+  ds.setAttribute("viewBox",`0 0 ${PW} 250`);cs.setAttribute("viewBox",`0 0 ${PW} 200`);ds.classList.toggle("narrow",narrow);cs.classList.toggle("narrow",narrow);
+  // demand bars
+  const top=20,bot=210,ymax=Math.max(mu+4*sd,Q*1.1,cm?cm.qs*1.1:0);
+  const Y=y=>bot-y/ymax*(bot-top), bw=(PW-pL-pR)/n, X=i=>pL+i*bw;
+  const ys=niceStep(ymax*1.6);
+  for(let y=0;y<=ymax+1e-9;y+=ys){de("line",{x1:pL,x2:PW-pR,y1:Y(y),y2:Y(y),stroke:v(y?"--line":"--muted"),"stroke-width":1});
+    const t=de("text",{x:pL-6,y:Y(y)+4,"text-anchor":"end"});t.textContent=+y.toFixed(1);}
+  const yl=de("text",{x:narrow?4:pL,y:14});yl.textContent=`demand per ${CASE.per} (${CASE.unit})`;
+  const xl=de("text",{x:PW-pR,y:bot+34,"text-anchor":"end"});xl.textContent=CASE.per;
+  const q=run?run.q:Q;
+  if(run)for(let i=0;i<run.shown;i++){const D=run.D[i],x=X(i)+bw*0.15,w=bw*0.7;
+    de("rect",{x,y:Y(Math.min(D,q)),width:w,height:Y(0)-Y(Math.min(D,q)),fill:v("--fill")});
+    if(D>q)de("rect",{x,y:Y(D),width:w,height:Y(q)-Y(D),fill:v("--bad")});
+    else if(q>D)de("rect",{x:x+0.75,y:Y(q),width:w-1.5,height:Y(D)-Y(q),fill:"none",stroke:v("--marker"),"stroke-width":1.2,"stroke-dasharray":"3 2"});}
+  const step=Math.max(1,Math.ceil(n/(narrow?6:15)));
+  for(let i=0;i<n;i+=step){const t=de("text",{x:X(i)+bw/2,y:bot+16,"text-anchor":"middle"});t.textContent=i+1;}
+  if(cm){const qs=roundQ(cm.qs);de("line",{x1:pL,x2:PW-pR,y1:Y(qs),y2:Y(qs),stroke:v("--opt"),"stroke-width":1.5,"stroke-dasharray":"6 4"});
+    const t=de("text",{x:PW-pR,y:Y(qs)+(qs<q?15:-6),"text-anchor":"end","font-weight":600,class:"halo"});t.textContent="Q*";t.style.fill=v("--opt");}
+  de("line",{x1:pL,x2:PW-pR,y1:Y(q),y2:Y(q),stroke:v("--marker"),"stroke-width":2});
+  const qsv=cm?roundQ(cm.qs):q,qBelow=q<=qsv;const qt=de("text",{x:PW-pR,y:Y(q)+(qBelow?15:-6),"text-anchor":"end","font-weight":600,class:"halo"});qt.textContent="your Q";qt.style.fill=v("--marker");
+  if(!run){const t=de("text",{x:(pL+PW-pR)/2,y:(top+bot)/2,"text-anchor":"middle"});t.textContent="Press Play to let demand arrive";t.style.fill=v("--ink");}
+  // running profit gap: Q* minus your Q
+  const cT=24,cB=176;
+  if(!run||!cm){const t=ce("text",{x:PW/2,y:100,"text-anchor":"middle"});t.textContent="The running profit gap appears here";return;}
+  let s=0;const G=run.D.map(D=>s+=outcome(run.qs,D).P-outcome(run.q,D).P);
+  let lo=Math.min(0,...G),hi=Math.max(0,...G);if(hi-lo<1e-9){hi=1;lo=-1;}
+  const pad=(hi-lo)*0.08;hi+=pad;lo-=pad;const rg=hi-lo;hi=Math.max(hi,0.16*rg);lo=Math.min(lo,-0.16*rg);
+  const CY=y=>cB-(y-lo)/(hi-lo)*(cB-cT),CX=i=>pL+(i+1)*bw-bw/2;
+  const cs2=niceStep((hi-lo)*1.6);
+  for(let y=Math.ceil(lo/cs2)*cs2;y<=hi+1e-9;y+=cs2){ce("line",{x1:pL,x2:PW-pR,y1:CY(y),y2:CY(y),stroke:v(Math.abs(y)<1e-9?"--muted":"--line"),"stroke-width":Math.abs(y)<1e-9?1.5:1});
+    const t=ce("text",{x:pL-6,y:CY(y)+4,"text-anchor":"end"});t.textContent=Math.abs(y)>=1e4?(y/1000).toFixed(0)+"k":+y.toFixed(0);}
+  const yl2=ce("text",{x:narrow?4:pL,y:14});yl2.textContent=`profit gap, Q* minus your Q${CASE.cur?" ("+CASE.cur+")":""}`;
+  const up=ce("text",{x:PW-pR,y:cT+10,"text-anchor":"end",class:"halo"});up.textContent="▲ Q* ahead";up.style.fill=v("--opt");
+  const dn=ce("text",{x:PW-pR,y:cB-4,"text-anchor":"end",class:"halo"});dn.textContent="▼ your Q ahead";dn.style.fill=v("--marker");
+  if(run.shown>0){const k=run.shown,pts=G.slice(0,k).map((y,i)=>[CX(i),CY(y)]);
+    const z0=CY(0).toFixed(1),line="M"+pts.map(([x,y])=>`${x.toFixed(1)},${y.toFixed(1)}`).join(" L");
+    const clip=(id,y1,y2)=>{const c=ce("clipPath",{id});el("rect",{x:0,y:y1,width:PW,height:Math.max(0,y2-y1)},c);};
+    clip("gUp",0,CY(0));clip("gDn",CY(0),200);
+    const area=`M${pts[0][0].toFixed(1)},${z0} L`+pts.map(([x,y])=>`${x.toFixed(1)},${y.toFixed(1)}`).join(" L")+` L${pts[k-1][0].toFixed(1)},${z0} Z`;
+    ce("path",{d:area,fill:v("--opt"),"fill-opacity":0.18,"clip-path":"url(#gUp)"});
+    ce("path",{d:area,fill:v("--marker"),"fill-opacity":0.18,"clip-path":"url(#gDn)"});
+    ce("path",{d:line,fill:"none",stroke:v("--ink"),"stroke-width":2});
+    ce("circle",{cx:pts[k-1][0],cy:pts[k-1][1],r:3.5,fill:v(G[k-1]>=0?"--opt":"--marker")});}
+}
+$("play").addEventListener("click",startPlay);
+$("skip").addEventListener("click",()=>{if(!run)startPlay();if(run)finishPlay();});
+$("pq").addEventListener("change",e=>{const x=parseFloat(e.target.value);if(!isFinite(x))return;
+  const r=$("q");Q=Math.min(Math.max(x,+r.min),+r.max);r.value=Q;update();});
+$("pn").addEventListener("change",resetPlay);
+let rzW=0;addEventListener("resize",()=>{const w=$("dchart").parentElement.clientWidth<560;if(w!==rzW){rzW=w;drawPlay();}});
+const redraw2=()=>drawPlay();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw2);
+new MutationObserver(redraw2).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+syncRange();update();newQuestion();caseNote();
 </script>
 <script src="../shared/fullscreen.js"></script>
 </body>
