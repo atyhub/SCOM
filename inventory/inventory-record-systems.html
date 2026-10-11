@@ -152,7 +152,7 @@ td b{font-family:var(--f-display);font-weight:600}
       <div class="card controls">
         <h3>Settings</h3>
         <div class="field"><div class="row"><label for="perR">Count every P days (review period)</label><output id="perROut">7</output></div><input type="range" id="perR" min="2" max="14" value="7"></div>
-        <div class="field"><div class="row"><label for="perL">Supplier lead time L (days)</label><output id="perLOut">2</output></div><input type="range" id="perL" min="1" max="6" value="2"></div>
+        <div class="field"><div class="row"><label for="perL">Supplier lead time L (days)</label><output id="perLOut">2</output></div><input type="range" id="perL" min="0" max="6" value="2"></div>
         <div class="field"><div class="row"><label for="perS">Target level T (units)</label><output id="perSOut">90</output></div><input type="range" id="perS" min="20" max="300" step="5" value="90"></div>
         <p class="note">Average demand is 8 units a day (σ<sub>d</sub> ≈ 2.8), varying from day to day. T has to cover demand for <b>P + L</b> days: with P + L = <span id="perRL">7 + 2</span>, expected demand is <b id="perNeed">72</b> units. For 95% service, T = d(P+L) + Z·σ<sub>d</sub>·√(P+L) ≈ <b id="perT95">86</b> units.</p>
         <div class="stats">
@@ -283,10 +283,11 @@ function perSimulate(){
   const r=rng(42),{R,L,S,d,N}=PER; let I=S,known=S,pipe=[];const days=[];
   for(let t=0;t<N;t++){
     let arrived=0;pipe=pipe.filter(o=>{if(o.a===t){I+=o.q;arrived+=o.q;return false;}return true;});
-    let count=false,order=0;
-    if(t%R===0){count=true;known=I;const onOrder=pipe.reduce((s,o)=>s+o.q,0);order=Math.max(0,S-I-onOrder);if(order>0)pipe.push({a:t+L,q:order});}
+    let count=false,order=0,counted=null;
+    if(t%R===0){count=true;known=counted=I;const onOrder=pipe.reduce((s,o)=>s+o.q,0);order=Math.max(0,S-I-onOrder);
+      if(order>0){if(L===0){I+=order;arrived+=order;known=I;}else pipe.push({a:t+L,q:order});}}
     const start=I,dem=demandOf(r,d),sold=Math.min(dem,I);I-=sold;
-    days.push({t,start,end:I,known,count,order,arrived,short:dem-sold});
+    days.push({t,start,end:I,known,count,counted,order,arrived,short:dem-sold});
   }
   return days;
 }
@@ -303,17 +304,17 @@ function perDraw(){
     // actual stock: within-day decline
     let a=`M${X(0)},${Y(0)}`;days.forEach(x=>{a+=` L${X(x.t)},${Y(x.start)} L${X(x.t+1)},${Y(x.end)}`;});a+=` L${X(days.length)},${Y(0)} Z`;
     s+=`<path d="${a}" fill="${v("--fill")}" fill-opacity=".45" stroke="${v("--fill")}" stroke-width="1.5"/>`;
-    let k="";days.forEach((x,i)=>{k+=(i?` L${X(x.t)},${Y(x.known)}`:`M${X(x.t)},${Y(x.known)}`)+` L${X(x.t+1)},${Y(x.known)}`;});
+    let k="";days.forEach((x,i)=>{const c=x.count&&x.counted!==x.known?` L${X(x.t)},${Y(x.counted)}`:"";k+=(i?c.replace(" L"," L")+` L${X(x.t)},${Y(x.known)}`:`M${X(x.t)},${Y(x.count?x.counted:x.known)} L${X(x.t)},${Y(x.known)}`)+` L${X(x.t+1)},${Y(x.known)}`;});
     s+=`<path d="${k}" fill="none" stroke="${v("--blue")}" stroke-width="2.5"/>`;
     days.forEach(x=>{
-      if(x.count)s+=`<circle cx="${X(x.t)}" cy="${Y(x.known)}" r="5" fill="${v("--blue")}" stroke="${v("--surface")}" stroke-width="2"/>`;
+      if(x.count)s+=`<circle cx="${X(x.t)}" cy="${Y(x.counted)}" r="5" fill="${v("--blue")}" stroke="${v("--surface")}" stroke-width="2"/>`;
       if(x.arrived)s+=`<path d="M${X(x.t)-6},${MT-14} L${X(x.t)+6},${MT-14} L${X(x.t)},${MT-5} Z" fill="${v("--marker")}"/>`;
       if(x.short>0)s+=`<rect x="${X(x.t)}" y="${H-MB-8}" width="${X(1)-X(0)}" height="8" fill="${v("--bad")}"/>`;
     });
     const last=days[days.length-1];
     if(!last.count&&last.end<last.known){const xx=X(last.t+1);
       s+=`<line x1="${xx}" x2="${xx}" y1="${Y(last.known)}" y2="${Y(last.end)}" stroke="${v("--bad")}" stroke-width="1.5" stroke-dasharray="2 2"/>`;
-      s+=`<text x="${xx+6}" y="${(Y(last.known)+Y(last.end))/2+4}" style="fill:${v("--bad")}">unseen: ${last.known-last.end}</text>`;}
+      const nr=xx>W-MR-80;s+=`<text x="${nr?xx-6:xx+6}" y="${(Y(last.known)+Y(last.end))/2+4}" text-anchor="${nr?"end":"start"}" style="fill:${v("--bad")}">unseen: ${last.known-last.end}</text>`;}
   }
   s+=`<text x="${W-MR}" y="12" text-anchor="end">● count day · ▼ delivery</text>`;
   svg.innerHTML=s;
@@ -324,7 +325,8 @@ function perDraw(){
 }
 function perEventFor(x){
   if(x.short>0)return["so",`Day ${x.t}: shelf ran empty, ${x.short} customers left without the product.`];
-  if(x.count)return["cnt",`Day ${x.t}: count! ${x.known} on the shelf. Ordered ${x.order} to bring stock up to T = ${PER.S}.`];
+  if(x.count&&PER.L===0)return["cnt",x.order>0?`Day ${x.t}: count! ${x.counted} on the shelf. With L = 0 the supplier fills the shelf at once: ${x.order} units bring stock up to T = ${PER.S}.`:`Day ${x.t}: count! ${x.counted} on the shelf, already at T = ${PER.S}, so nothing is added.`];
+  if(x.count)return["cnt",`Day ${x.t}: count! ${x.counted} on the shelf. Ordered ${x.order} to bring stock up to T = ${PER.S}.`];
   if(x.arrived)return["arr",`Day ${x.t}: delivery of ${x.arrived} units arrived.`];
   return["",`Day ${x.t}: no count today. The record still says ${x.known}, but the shelf holds ${x.end}.`];
 }
