@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Quantity Discount Model: Learner Guide</title>
+<meta name="description" content="Learner guide for the Quantity Discount Model simulation: theory, formulas and how to use the simulation. MSB255 Supply Chain and Operations Management, University of Stavanger, School of Business and Law.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=STIX+Two+Text:ital@0;1&display=swap">
+<style>
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#18232d; --muted:#5b6876; --line:#d6dde4;
+  --accent:#d9622b; --teal:#2a9474; --navy:#1f3a5f; --shade:#eef2f5;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --f-math:"STIX Two Text","Cambria Math",Cambria,Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#97a5b2; --line:#2c3843;
+  --accent:#f08a52; --teal:#4cc59e; --navy:#9cc0e8; --shade:#1f2a35; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--f-body);margin:0}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 48px}
+.topnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.topnav a{color:var(--ink);text-decoration:none;font-weight:600;font-size:14px}
+.topnav a:hover{color:var(--accent)}
+.topnav .home{color:var(--muted);font-weight:500}
+header{display:grid;gap:6px;padding-bottom:20px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(26px,4.5vw,36px)/1.15 var(--f-display);margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:0;font-style:italic}
+main{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 28px 28px}
+@media (max-width:600px){main{padding:4px 16px 20px}}
+h2{font:600 23px/1.25 var(--f-display);margin:36px 0 10px;display:flex;align-items:baseline;gap:10px;scroll-margin-top:16px}
+h2 .num{font:600 14px var(--f-mono);color:var(--surface);background:var(--teal);border-radius:6px;padding:2px 8px;position:relative;top:-2px}
+h3{font:600 18px/1.3 var(--f-display);margin:26px 0 6px;color:var(--teal)}
+h4{font:600 16px/1.3 var(--f-body);margin:22px 0 4px;color:var(--navy)}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 14px;padding-left:24px}
+li{margin:4px 0}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+.tbl{overflow-x:auto;margin:6px 0 16px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+thead th{background:var(--shade);font-weight:600}
+tbody th{background:var(--shade);font-weight:500;white-space:nowrap}
+.tbl.fill td{height:2.1em;min-width:5em}
+.formulas{display:grid;grid-template-columns:minmax(150px,34%) 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:8px 0 16px}
+.formulas>div{padding:9px 12px;border-bottom:1px solid var(--line)}
+.formulas>div:nth-last-child(-n+2){border-bottom:0}
+.f-lab{background:var(--shade);font-size:14px;color:var(--muted)}
+.f-eq{font:18px/1.45 var(--f-math)}
+@media (max-width:600px){.formulas{grid-template-columns:1fr}.formulas>div.f-lab{border-bottom:0;padding-bottom:2px}}
+figure{margin:14px 0 20px}
+figure img{display:block;width:100%;margin:0 auto;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+figcaption{font-size:13.5px;color:var(--muted);font-style:italic;margin-top:6px;text-align:center}
+.box{background:var(--shade);border-left:4px solid var(--accent);border-radius:6px;padding:12px 16px;margin:10px 0 16px}
+.ref{padding-left:1.6em;text-indent:-1.6em;font-size:14.5px}
+details.answers{margin-top:36px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+details.answers summary{cursor:pointer;padding:14px 18px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font:600 18px var(--f-display);list-style:none}
+details.answers summary::-webkit-details-marker{display:none}
+details.answers summary::before{content:"▸";color:var(--accent);transition:transform .2s}
+details.answers[open] summary::before{transform:rotate(90deg)}
+details.answers .hint{font:400 13.5px var(--f-body);color:var(--muted)}
+.ans-body{padding:0 18px 12px}
+.ans-body h3{margin-top:12px}
+.end{display:flex;flex-direction:column;align-items:center;gap:12px;margin:32px 0 8px}
+.btn{display:inline-block;font:600 15px var(--f-body);padding:11px 22px;border-radius:8px;background:var(--ink);color:var(--surface);text-decoration:none}
+.btn:hover{opacity:.88}
+.pdf{font-size:14px;color:var(--muted)}
+.pdf a{color:var(--muted)}
+footer{font-size:13px;color:var(--muted);text-align:center;margin-top:28px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media print{
+  body{background:#fff;font-size:11pt}
+  .topnav,.end,.no-print{display:none!important}
+  main{border:0;padding:0}
+  .wrap{max-width:none;padding:0}
+  h2,h3,h4{break-after:avoid}
+  figure,.formulas,table{break-inside:avoid}
+  figure img{max-height:110mm;width:auto!important;max-width:100%!important}
+  details.answers{border:0;background:#fff;break-before:page}
+  details.answers summary::before{content:""}
+  details.answers .hint{display:none}
+}
+.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent,var(--marker))}.fs-btn[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topnav" aria-label="Guide navigation">
+    <a href="quantity-discount.html">← Back to simulation</a>
+    <span style="display:flex;gap:18px;align-items:center"><button type="button" class="fs-btn" hidden>⛶ Full screen</button><a class="home" href="../home.html">All simulations</a></span>
+  </nav>
+  <header>
+    <span class="eyebrow">LEARNER GUIDE · INTERACTIVE SIMULATION</span>
+    <h1>Quantity Discount Model: Is the Discount Worth a Bigger Order?</h1>
+    <p class="sub">MSB255 Supply Chain and Operations Management</p>
+  </header>
+  <main>
+<h2 id="1-about-this-simulation"><span class="num">1</span>About this simulation</h2>
+<p>Suppliers often offer a lower unit price when you buy more. A lower price saves money on every unit purchased, but earning it may require larger orders, and larger orders mean more stock on the shelf. The <strong>quantity discount model</strong> finds the order quantity that gives the lowest total annual cost of ordering, holding and purchasing.</p>
+<p>This simulation draws one total cost curve for each price. Each curve only counts inside its <strong>feasible range</strong>, the order sizes that actually earn that price. You can change the demand and cost inputs, edit the price breaks and prices, drag your own order quantity along the curves and compare ready-made price scenarios.</p>
+<p>After working through this guide, you should be able to:</p>
+<ul><li>explain why each price has its own total cost curve, and why only part of each curve is feasible;</li><li>apply the four-step procedure to find the optimal order quantity under quantity discounts;</li><li>calculate the ordering, holding and purchase cost of each candidate order quantity;</li><li>judge when a discount is worth taking, and explain the role of the purchase cost PD in that decision.</li></ul>
+<h2 id="2-theory-background"><span class="num">2</span>Theory background</h2>
+<h3>Assumptions</h3>
+<p>The model keeps the assumptions of the basic EOQ model (known and constant demand, constant lead time, instantaneous receipt, no stockouts) with one change: the <strong>unit price depends on the order quantity</strong>. Because the price changes with Q, the annual purchase cost P × D is no longer the same for every Q and must be part of the total cost. Holding cost is a percentage of the price, so a lower price also makes each unit cheaper to hold.</p>
+<h3>Notation</h3>
+<p>The notation is the same as in the course formula sheet.</p>
+<div class="tbl"><table><thead><tr><th>Symbol</th><th>Meaning</th></tr></thead><tbody><tr><td>D</td><td>Annual demand (units/year)</td></tr><tr><td>S</td><td>Ordering or setup cost per order ($/order)</td></tr><tr><td>I</td><td>Holding cost as a percentage of the unit price per year</td></tr><tr><td>P</td><td>Unit price ($/unit), which depends on the order quantity</td></tr><tr><td>IP</td><td>Holding cost per unit per year at price P (H = I × P)</td></tr><tr><td>Q, Q*</td><td>Order quantity; EOQ for a given price</td></tr><tr><td>TC</td><td>Total annual cost of ordering, holding and purchasing</td></tr></tbody></table></div>
+<h3>Total cost with a price that depends on Q</h3>
+<div class="formulas"><div class="f-lab">EOQ for price P</div><div class="f-eq">Q* = √(2DS / IP)</div><div class="f-lab">Total annual cost</div><div class="f-eq">TC = (D / Q) × S + (Q / 2) × IP + P × D</div></div>
+<p>For each price there is one total cost curve. A lower price moves the curve down (less purchase cost) and makes it slightly flatter on the right (less holding cost per unit), so its Q* lies a little further to the right. But a price is only paid for order quantities inside its range. The feasible total cost is therefore a <strong>stepped curve</strong>: it follows the curve of each price inside that price&#x27;s range and drops at every price break.</p>
+<h3>The four-step procedure</h3>
+<ol><li>For each price, calculate Q* = √(2DS / IP).</li><li>If Q* is too low to earn its price, raise it to the lowest quantity that earns the price (the break point). If Q* is above the range of its price, drop that price: a lower price is then available at a lower cost.</li><li>Calculate the total annual cost TC at each remaining order quantity.</li><li>Choose the order quantity with the lowest total cost.</li></ol>
+<p>Why raise Q* to the break point and not further? To the right of its Q*, each total cost curve rises, so the cheapest feasible point on that curve is the first quantity that earns the price.</p>
+<h3>Worked example (textbook scenario)</h3>
+<p>D = 5,000 units/year, S = $49/order, I = 20%. The supplier charges $5.00 for orders of 1 to 999 units, $4.80 for 1,000 to 1,999 units and $4.75 for 2,000 units or more.</p>
+<div class="tbl"><table><thead><tr><th>Price</th><th>Q* = √(2DS / IP)</th><th>Order Q</th><th>Ordering</th><th>Holding</th><th>Purchase</th><th>Total cost</th></tr></thead><tbody><tr><td>$5.00</td><td>700 (feasible)</td><td>700</td><td>$350</td><td>$350</td><td>$25,000</td><td>$25,700</td></tr><tr><td>$4.80</td><td>714 (raise)</td><td>1,000</td><td>$245</td><td>$480</td><td>$24,000</td><td><strong>$24,725</strong></td></tr><tr><td>$4.75</td><td>718 (raise)</td><td>2,000</td><td>$122.50</td><td>$950</td><td>$23,750</td><td>$24,822.50</td></tr></tbody></table></div>
+<p>The lowest total cost is <strong>$24,725 at Q = 1,000 units</strong>. Taking the $4.80 price saves $975 a year compared with the EOQ at the full price. The deeper $4.75 discount saves another $250 on purchases, but doubling the order adds $470 of holding cost and saves only $122.50 of ordering cost, so total cost rises by $97.50.</p>
+<h2 id="3-how-to-use-the-simulation"><span class="num">3</span>How to use the simulation</h2>
+<h3>Getting started</h3>
+<ul><li>Choose a <strong>Price scenario</strong>: the textbook example, a small discount that is not worth taking, a deep discount at a high break, or four price breaks.</li><li>Set annual demand <strong>D</strong>, ordering cost <strong>S</strong> and the holding cost rate <strong>I</strong> with the sliders.</li><li>Edit the <strong>Price tiers</strong>: the quantity at which each price starts and the price itself. Tier 1 always starts at 0, and breaks are sorted automatically. <strong>+ Add price break</strong> adds a tier (up to four); <strong>✕</strong> removes one.</li><li><strong>Set Q = optimal</strong> moves the orange line to the optimum. Drag the orange line on the chart to price any order size.</li><li>Untick <strong>Include purchase cost PD</strong> to see ordering plus holding cost only. Untick <strong>Show curves outside their range</strong> to see only the feasible stepped curve.</li></ul>
+<h3>What you see</h3>
+<figure><img style="max-width:100%" src="img/quantity-discount-qd-chart.png" alt="Figure 1. Textbook scenario. One colour per price; solid inside the feasible range, dashed outside. The optimum (orange ring) is at Q = 1,000 with TC = $24,725." loading="lazy"><figcaption>Figure 1. Textbook scenario. One colour per price; solid inside the feasible range, dashed outside. The optimum (orange ring) is at Q = 1,000 with TC = $24,725.</figcaption></figure>
+<ul><li><strong>Coloured curves:</strong> total cost for each price. The solid part is the feasible range; the dashed part shows what the curve would be if that price applied everywhere.</li><li><strong>Bands under the axis:</strong> the order sizes that earn each price.</li><li><strong>Q* markers:</strong> a filled dot means Q* is feasible; a hollow dot means Q* is too small and is raised to the break (filled dot at the break); a red ✕ means Q* is above the range and the price is dropped.</li><li><strong>Dotted black steps:</strong> the drop in total cost at each price break.</li><li><strong>Orange ring:</strong> the optimal order quantity. The sentence below the chart states the decision and the saving.</li></ul>
+<figure><img style="max-width:66%" src="img/quantity-discount-qd-steps.png" alt="Figure 2. The four steps for the same scenario, with the cost breakdown of each candidate. The optimal row is highlighted." loading="lazy"><figcaption>Figure 2. The four steps for the same scenario, with the cost breakdown of each candidate. The optimal row is highlighted.</figcaption></figure>
+<h3>Try this</h3>
+<h4><strong>A. The textbook scenario</strong></h4>
+<ol><li>Calculate Q* for each price by hand, decide which ones must be raised, and calculate the three total costs. Check your answers against the step table.</li><li>Drag the orange line to Q = 999 and then to Q = 1,000. How much does total cost change in that one unit, and why?</li></ol>
+<h4><strong>B. Where does the saving come from?</strong></h4>
+<ol><li>Untick <strong>Include purchase cost PD</strong>. Which order quantity now looks cheapest? Explain why the discounts only pay off once the purchase cost is included.</li></ol>
+<figure><img style="max-width:100%" src="img/quantity-discount-qd-nopd.png" alt="Figure 3. The same scenario with the purchase cost PD left out. Ordering plus holding cost alone favours the small order at the full price." loading="lazy"><figcaption>Figure 3. The same scenario with the purchase cost PD left out. Ordering plus holding cost alone favours the small order at the full price.</figcaption></figure>
+<h4><strong>C. Changing the offer</strong></h4>
+<ol><li>In the textbook scenario, lower the $4.75 price step by step. At about which price does ordering 2,000 units become the best choice?</li><li>Select <strong>Small discount, not worth it</strong>. Why does the 1% discount at 2,000 units not pay off? How large would the discount need to be?</li><li>Select <strong>Deep discount at a high break</strong>. Here the optimum is far above every Q*. What does this tell you about suppliers who offer large discounts for large orders?</li><li>Select <strong>Four price breaks</strong> and find out why the cheapest price is not the best choice.</li></ol>
+<figure><img style="max-width:100%" src="img/quantity-discount-qd-deep.png" alt="Figure 4. Deep discount at a high break: the $10.00 price at 3,000 units gives the lowest total cost, even though all three Q* values are below 500." loading="lazy"><figcaption>Figure 4. Deep discount at a high break: the $10.00 price at 3,000 units gives the lowest total cost, even though all three Q* values are below 500.</figcaption></figure>
+<h2 id="4-check-your-understanding"><span class="num">4</span>Check your understanding</h2>
+<ol><li>D = 3,600 units/year, S = $50/order and I = 20%. The price is $10.00 for fewer than 500 units, $9.60 for 500 to 999 units and $9.40 for 1,000 units or more. Find the optimal order quantity and its total annual cost.</li><li>Why is the purchase cost P × D included in the total cost here, while it is left out in the basic EOQ model?</li><li>Why does Q* increase slightly when the price falls?</li><li>In the four-step procedure, why can a price be dropped when its Q* lies above its feasible range?</li><li>A supplier offers a large discount, but only for very large orders. Name two practical concerns, beyond the cost model, that a manager should consider before accepting it.</li></ol>
+<h2 id="references">References</h2>
+<p class="ref">MSB255 Supply Chain and Operations Management: course materials. University of Stavanger.</p>
+<p class="ref">Heizer, J., Render, B., &amp; Munson, C. (2017). <em>Operations Management: Sustainability and Supply Chain Management</em> (12th ed.). Pearson.</p>
+<details class="answers" id="answers"><summary><span>Answers and expected results</span><span class="hint">Try the exercises first, then open to check</span></summary><div class="ans-body">
+<h3>Simulation results</h3>
+<div class="tbl"><table><thead><tr><th>Run</th><th>Result</th></tr></thead><tbody><tr><td>A1 Textbook</td><td>Q* = 700, 714, 718. Candidates 700, 1,000, 2,000 with TC $25,700, $24,725, $24,822.50. Optimal Q = 1,000.</td></tr><tr><td>A2 Q = 999 vs 1,000</td><td>TC falls from about $25,744 to $24,725: one extra unit earns the $4.80 price on all 5,000 units, saving about $1,000 in purchase cost.</td></tr><tr><td>B Without PD</td><td>Ordering + holding: $700 at Q = 700, $725 at 1,000, $1,072.50 at 2,000. The full-price EOQ looks best; the $1,000 and $1,250 purchase savings are what make the discounts worthwhile.</td></tr><tr><td>C1 Lower $4.75</td><td>TC at 2,000 = 122.50 + 5,200 × P. It beats $24,725 when P &lt; about $4.73 (e.g. at $4.70, TC = $24,562.50).</td></tr><tr><td>C2 Small discount</td><td>D 2,000, S $40, I 25%: $10.00 → Q* = 253, TC $20,632; $9.90 at 2,000 → TC $22,315. The $200 purchase saving is far less than the extra $2,159 of holding cost. The price at 2,000 would have to fall below about $9.15 (a discount of more than 8.5%).</td></tr><tr><td>C3 Deep discount</td><td>Q* = 447, 457, 490; candidates 447, 500, 3,000 with TC $49,073, $47,055, $43,080. Optimal Q = 3,000: a big price cut can justify ordering far above the EOQ.</td></tr><tr><td>C4 Four breaks</td><td>Candidates 693, 800, 1,500, 4,000 with TC $32,693, $31,890, $31,273, $31,510. Optimal Q = 1,500; at 4,000 units the extra holding cost outweighs the $800 purchase saving.</td></tr></tbody></table></div>
+<h3>Check your understanding</h3>
+<ol><li>Q* = 424 ($10.00, feasible), 433 ($9.60, raise to 500), 438 ($9.40, raise to 1,000). TC = $36,848.53 at 424; $35,400 at 500 (360 + 480 + 34,560); $34,960 at 1,000 (180 + 940 + 33,840). Optimal Q = 1,000 with TC = $34,960.</li><li>In the basic EOQ model the price is the same for every Q, so P × D is a constant that does not affect the choice. With quantity discounts the price, and so the purchase cost, changes with Q and must be compared.</li><li>Holding cost per unit is I × P. A lower price lowers the holding cost per unit, and Q* = √(2DS / IP) rises when IP falls.</li><li>Each lower price has a lower total cost curve and a larger Q*. If the Q* of a price lies above its range, the order quantity it points to already earns a lower price, which gives a lower cost. So the higher price can never be optimal.</li><li>Examples: storage space and capital tied up; risk of obsolescence, damage or spoilage; cash flow; supplier reliability and quality; demand uncertainty, since large orders commit the firm for a long time.</li></ol>
+</div></details>
+  </main>
+  <div class="end">
+    <a class="btn" href="quantity-discount.html">Open the simulation →</a>
+    <span class="pdf"><a href="pdf/quantity-discount-guide.pdf" download>Download PDF</a> of this guide</span>
+  </div>
+  <footer>MSB255 Supply Chain and Operations Management · University of Stavanger, School of Business and Law</footer>
+</div>
+<script src="../shared/fullscreen.js"></script>
+</body>
+</html>
