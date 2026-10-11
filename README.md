@@ -9,8 +9,6 @@ embedded in Canvas.
 ```
 index.html            Shell page (keeps full screen across pages). Canvas embeds this.
 home.html             Landing page with the simulation cards.
-formula-sheet/        Course formula sheet (study aid).
-formula-sheet.html    Redirect to formula-sheet/ (keeps the old Canvas link working).
 shared/               Code used by every page (fullscreen.js).
 <topic>/              One folder per course topic, e.g. inventory/.
   <name>.html           Simulation
