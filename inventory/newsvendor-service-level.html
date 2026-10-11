@@ -97,10 +97,6 @@ svg.narrow text{font-size:17px}
 svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
 @media (max-width:520px){.compare table{font-size:13px}.compare th,.compare td{padding:6px 5px}.compare td:first-child{white-space:normal}}
 .cases{display:grid;gap:10px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:600 13px var(--f-body);padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
-.chip:hover{opacity:1;border-color:var(--ink)}
 .case-note{margin:0;font-size:14px;color:var(--muted);max-width:75ch}
 .case-note b{color:var(--ink)}
 .pctl{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:end}
@@ -138,8 +134,7 @@ svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-l
   </section>
 
   <section class="cases" aria-labelledby="caseH">
-    <h2 id="caseH">Choose a case</h2>
-    <div class="chips" id="chips" role="group" aria-label="Cases"></div>
+    <h2 id="caseH">The case: cinnamon buns at a bakery</h2>
     <p class="case-note" id="caseNote"></p>
   </section>
 
@@ -157,16 +152,16 @@ svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-l
     <section class="panel" aria-labelledby="ctlH">
       <h2 id="ctlH">Model settings</h2>
       <div class="field">
-        <div class="row"><label for="q">Initial stock level, Q (units)</label><output id="qOut" for="q">95</output></div>
-        <input type="range" id="q" min="40" max="120" step="1" value="95">
+        <div class="row"><label for="q">Initial stock level, Q (buns)</label><output id="qOut" for="q">120</output></div>
+        <input type="range" id="q" min="20" max="220" step="1" value="120">
       </div>
       <div class="pair">
-        <div class="field"><label for="mu">Mean demand, μ</label><input type="number" id="mu" value="80" step="1"></div>
-        <div class="field"><label for="sd">Std. deviation, σ</label><input type="number" id="sd" value="10" min="1" step="1"></div>
+        <div class="field"><label for="mu">Mean demand, μ</label><input type="number" id="mu" value="120" step="1"></div>
+        <div class="field"><label for="sd">Std. deviation, σ</label><input type="number" id="sd" value="25" min="1" step="1"></div>
       </div>
       <div class="field">
-        <div class="row"><label for="target">Or set a target service level</label><output id="tOut" for="target">93%</output></div>
-        <input type="range" id="target" min="1" max="99" step="1" value="93">
+        <div class="row"><label for="target">Or set a target service level</label><output id="tOut" for="target">50%</output></div>
+        <input type="range" id="target" min="1" max="99" step="1" value="50">
       </div>
       <p class="note">Service level = Φ((Q − μ) / σ). Working backwards, Q = μ + Z·σ, where Z is the standard normal value for the target probability. In Excel: <code>=NORM.DIST(Q, μ, σ, TRUE)</code> and <code>=NORM.INV(SL, μ, σ)</code>.</p>
     </section>
@@ -192,9 +187,9 @@ svg text.halo{paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-l
       <p class="sub">Enter the unit economics. The optimal stock level Q* makes the service level equal to the critical ratio. The chart below shows expected profit for every Q, with its peak at Q*.</p>
     </div>
     <div class="costs">
-      <div class="field"><label for="price">Selling price, p</label><input id="price" type="number" step="0.01" min="0" value="12"></div>
-      <div class="field"><label for="cost">Purchase cost, c</label><input id="cost" type="number" step="0.01" min="0" value="5"></div>
-      <div class="field"><label for="salv">Salvage value, v</label><input id="salv" type="number" step="0.01" min="0" value="1"></div>
+      <div class="field"><label for="price">Selling price, p</label><input id="price" type="number" step="0.01" min="0" value="45"></div>
+      <div class="field"><label for="cost">Purchase cost, c</label><input id="cost" type="number" step="0.01" min="0" value="12"></div>
+      <div class="field"><label for="salv">Salvage value, v</label><input id="salv" type="number" step="0.01" min="0" value="0"></div>
       <div class="field"><label for="good">Goodwill cost per unit short, g</label><input id="good" type="number" step="0.01" min="0" value="0"></div>
     </div>
     <p class="fb no" id="costErr"></p>
@@ -272,7 +267,7 @@ const pdf=(x,m,s)=>Math.exp(-0.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
 
 // --- state ---
 const $=id=>document.getElementById(id);
-let mu=80, sd=10, Q=95;
+let mu=120, sd=25, Q=120;
 const W=900,H=340,L=40,R=20,T=24,B=40;
 const NS="http://www.w3.org/2000/svg";
 function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||svg).appendChild(e);return e;}
@@ -336,6 +331,7 @@ function update(fromTarget){
   draw();
   drawProfit();
   if(typeof resetPlay==="function")resetPlay();
+  if(typeof caseNote==="function")caseNote();
 }
 function syncRange(){
   const q=$("q");q.min=Math.floor(mu-4*sd);q.max=Math.ceil(mu+4*sd);q.step=sd<5?0.1:1;
@@ -355,10 +351,10 @@ function newQuestion(){
   if(kind==="Q"){const p=[5,10,15,20,25,30,35,40,45,54,60,65,70,75,80,85,90,95,97,98,99][Math.floor(Math.random()*21)];
     const ans=mu+invPhi(p/100)*sd;
     cur={kind,ans,tol:Math.max(0.6,sd*0.03),sol:`Z = NORM.S.INV(${p/100}) = ${invPhi(p/100).toFixed(3)}, so Q = ${mu} + ${invPhi(p/100).toFixed(3)} × ${sd} = ${ans.toFixed(2)} ≈ ${Math.round(ans)} units.`,
-      text:`If the vendor wants a service level of <b>${p}%</b>, what should the initial stock level be each morning? (units, rounded)`};
+      text:`If the bakery wants a service level of <b>${p}%</b>, what should the initial stock level be each morning? (buns, rounded)`};
   }else{const q=Math.round(mu+(Math.random()*5-2.5)*sd);const z=(q-mu)/sd,ans=Phi(z)*100;
     cur={kind,ans,tol:0.6,sol:`Z = (${q} − ${mu}) / ${sd} = ${z.toFixed(2)}, and Φ(${z.toFixed(2)}) = ${ans.toFixed(1)}%.`,
-      text:`If the vendor starts the day with <b>${q} units</b>, what service level does the vendor provide? (percent, one decimal)`};}
+      text:`If the bakery starts the day with <b>${q} buns</b>, what service level does it provide? (percent, one decimal)`};}
   $("qText").innerHTML=cur.text;$("ans").value="";$("fb").textContent="";$("fb").className="fb";cur.done=false;
 }
 $("check").addEventListener("click",()=>{
@@ -392,7 +388,7 @@ function computeCosts(){
   const cr=cu/(cu+co),zs=invPhi(cr),qs=mu+zs*sd;
   cm={p,c,v:sv,g,cu,co,cr,zs,qs};
   $("cu").textContent=money(cu);$("co").textContent=money(co);$("cr").textContent=cr.toFixed(3)+" ("+pct(cr)+")";
-  $("zs").textContent=zs.toFixed(3);$("qs").textContent=qs.toFixed(1)+" units";
+  $("zs").textContent=zs.toFixed(3);$("qs").textContent=qs.toFixed(1)+" buns";
   $("qsH").textContent=qs.toFixed(1);$("qH").textContent=fmtQ(Q);
   const a=metrics(qs),b=metrics(Q);
   [["sl",x=>pct(x.sl)],["s",x=>x.S.toFixed(1)],["i",x=>x.I.toFixed(1)],["l",x=>x.L.toFixed(2)],["p",x=>money(x.P)]]
@@ -431,32 +427,14 @@ $("useQs").addEventListener("click",()=>{if(!cm)return;Q=sd>=5?Math.round(cm.qs)
 const redraw=()=>{draw();drawProfit();};
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
 new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
-// --- cases ---
-const CASES=[
- {id:"basic",name:"Textbook example",unit:"units",per:"day",cur:"",mu:80,sd:10,p:12,c:5,v:1,g:0,
-  text:"A generic product, used in the guide and the quiz. Price 12, cost 5, salvage value 1."},
- {id:"buns",name:"Bakery: cinnamon buns",unit:"buns",per:"day",cur:"NOK",mu:120,sd:25,p:45,c:12,v:0,g:0,
-  text:"Baked fresh every morning for NOK 12 and sold for NOK 45. Buns left at closing time are given away, so they are worth nothing."},
- {id:"salmon",name:"Fish counter: fresh salmon",unit:"kg",per:"day",cur:"NOK",mu:60,sd:12,p:289,c:160,v:60,g:0,
-  text:"Bought at the morning auction for NOK 160 per kg and sold for NOK 289 per kg. Fish left at closing goes into fish cakes, worth NOK 60 per kg."},
- {id:"trees",name:"Christmas trees in Stavanger",unit:"trees",per:"season",cur:"NOK",mu:400,sd:80,p:499,c:300,v:0,g:0,
-  text:"One order before December at NOK 300 per tree, sold for NOK 499. Trees still unsold on Christmas Eve are worth nothing."},
- {id:"fest",name:"Festival T-shirts",unit:"shirts",per:"festival",cur:"NOK",mu:500,sd:120,p:350,c:90,v:40,g:0,
-  text:"Printed once before a summer festival at NOK 90 and sold for NOK 350. Leftover shirts are sold to an outlet for NOK 40."}
-];
-let CASE=CASES[0];
-$("chips").innerHTML=CASES.map(c=>`<button type="button" class="chip" data-id="${c.id}" aria-pressed="${c===CASE}">${c.name}</button>`).join("");
-function caseNote(){if(!cm){$("caseNote").innerHTML=CASE.text;return;}
+// --- the case ---
+const CASE={unit:"buns",per:"day",cur:"NOK"};
+function caseNote(){
+  const n=x=>+(+x).toFixed(2);
+  if(!cm){$("caseNote").innerHTML="A bakery bakes cinnamon buns fresh every morning and sells them the same day. Enter valid prices and costs below to see the best order.";return;}
+  const left=cm.v>0?`Buns left at closing time are sold off at NOK ${n(cm.v)} each.`:"Buns left at closing time are given away, so they are worth nothing.";
   const lo=cm.cr<0.5;
-  $("caseNote").innerHTML=`${CASE.text} Critical ratio = <b>${cm.cr.toFixed(2)}</b>, so the best order is <b>${lo?"below":"above"} mean demand</b>${lo?": a unit left over costs more than a unit short.":": a unit short costs more than a unit left over."}`;}
-function setCase(c){CASE=c;
-  document.querySelectorAll("#chips .chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.id===c.id));
-  $("mu").value=c.mu;$("sd").value=c.sd;$("price").value=c.p;$("cost").value=c.c;$("salv").value=c.v;$("good").value=c.g;
-  mu=c.mu;sd=c.sd;Q=Math.round(c.mu);
-  document.querySelectorAll(".perName").forEach(e=>e.textContent=/^[A-Z]/.test(e.textContent)?c.per[0].toUpperCase()+c.per.slice(1):c.per);
-  syncRange();update();newQuestion();caseNote();}
-$("chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b)setCase(CASES.find(c=>c.id===b.dataset.id));});
-["price","cost","salv","good","mu","sd"].forEach(id=>$(id).addEventListener("change",()=>caseNote()));
+  $("caseNote").innerHTML=`A bakery bakes cinnamon buns fresh every morning for NOK ${n(cm.c)} each and sells them for NOK ${n(cm.p)}. ${left} Daily demand is roughly normal with mean ${n(mu)} and standard deviation ${n(sd)}. The critical ratio is <b>${cm.cr.toFixed(2)}</b>, so the best order is <b>${lo?"below":"above"} mean demand</b>${lo?": a bun left over costs more than a bun short.":": a bun short costs more than a bun left over."}`;}
 
 // --- play a season ---
 let run=null,timer=null;
