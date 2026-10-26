@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Flow Time Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one working column — controls, the growing schedule, jobs-in-system chart, then KPIs and the rule comparison. */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #1f2a33;
+  --muted: #5d6b76;
+  --line: #d9dfe5;
+  --accent: #1b7f79;
+  --accent-soft: #e3f1ef;
+  --navy: #1f3a5f;
+  --late: #c0392b;
+  --j1: #2f6db5; --j2: #d9822b; --j3: #3a9a5b; --j4: #8a4fb0; --j5: #c24d6e;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+    --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --late: #ff7a6b;
+    --j1: #6fa3e6; --j2: #f0a35a; --j3: #6cc58a; --j4: #b98ae0; --j5: #ec7f9c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+  --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --late: #ff7a6b;
+  --j1: #6fa3e6; --j2: #f0a35a; --j3: #6cc58a; --j4: #b98ae0; --j5: #ec7f9c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 800 clamp(28px, 4vw, 40px)/1.1 var(--f-display); margin: 0; color: var(--navy); text-wrap: balance; }
+h2 { font: 700 18px/1.2 var(--f-display); margin: 0; color: var(--navy); }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+label.lbl { font: 600 12px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+select, button { font: inherit; color: var(--ink); }
+select { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { background: var(--panel); border: 0; border-right: 1px solid var(--line); padding: 7px 14px; cursor: pointer; font-weight: 700; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--accent-soft); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 4px 3px 10px; background: var(--panel); }
+.chip b { font: 700 16px/1 var(--f-display); }
+.chip small { color: var(--muted); font: 12px var(--f-mono); margin-right: 4px; }
+.chip .sw { width: 10px; height: 10px; border-radius: 2px; }
+.chip button { border: 0; background: transparent; cursor: pointer; padding: 2px 6px; border-radius: 4px; color: var(--muted); font-size: 14px; }
+.chip button:hover { background: var(--accent-soft); color: var(--ink); }
+.chip button:disabled { opacity: .25; cursor: default; background: transparent; }
+.arrow { color: var(--muted); }
+.tag { font: 600 12px/1 var(--f-mono); padding: 4px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+.player { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.btn { border: 1px solid var(--accent); background: var(--accent); color: var(--panel); border-radius: 8px; padding: 7px 16px; font-weight: 700; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--accent); }
+input[type="range"] { flex: 1 1 220px; accent-color: var(--accent); min-width: 0; }
+.clock { font: 600 15px var(--f-mono); min-width: 9ch; font-variant-numeric: tabular-nums; }
+.readout { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); font-variant-numeric: tabular-nums; }
+.readout strong { color: var(--navy); }
+.scroll { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 620px; height: auto; font-family: var(--f-body); }
+svg text { fill: var(--ink); }
+svg .muted { fill: var(--muted); }
+svg .mono { font-family: var(--f-mono); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.kpi .k { font: 600 12px/1.3 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.kpi .v { font: 800 26px/1.15 var(--f-display); color: var(--navy); font-variant-numeric: tabular-nums; }
+.kpi .f { font: 12px/1.4 var(--f-mono); color: var(--muted); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+thead th { background: var(--accent); color: var(--panel); font-weight: 700; font-size: 14px; }
+tbody tr.current { background: var(--accent-soft); }
+td.best { color: var(--accent); font-weight: 700; }
+.note { margin: 0; color: var(--muted); font-size: 14px; max-width: 75ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 22px; height: 10px; border-radius: 2px; display: inline-block; }
+.takeaway { border-left: 4px solid var(--accent); padding: 4px 0 4px 12px; margin: 0; max-width: 75ch; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.sim-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}.sim-nav a{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none}.sim-nav a:hover{color:var(--accent)}.sim-nav-end{justify-content:center;padding-top:8px;border-top:1px solid var(--line)}
+.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent)}.fs-btn[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="sim-nav" aria-label="Site"><a href="../home.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
+  <header>
+    <span class="eyebrow">MSB255 · Scheduling · Sequencing rules</span>
+    <h1>Flow Time Lab</h1>
+    <p class="lede">One work centre, five jobs, one job at a time. Pick a rule or reorder the jobs yourself, then press Play. A job's flow time runs from time 0 until it is finished, so waiting counts too.</p>
+  </header>
+
+  <section class="panel" aria-label="Set-up">
+    <div class="row">
+      <label class="lbl" for="dataset">Example</label>
+      <select id="dataset">
+        <option value="sethi">Sethi Architects (days)</option>
+        <option value="tts">TTS, five cars, one lift (minutes)</option>
+      </select>
+      <span class="note" id="dsNote"></span>
+    </div>
+    <div class="row">
+      <span class="lbl">Rule</span>
+      <div class="seg" id="rules" role="group" aria-label="Sequencing rule">
+        <button type="button" data-rule="FCFS">FCFS</button>
+        <button type="button" data-rule="SPT">SPT</button>
+        <button type="button" data-rule="EDD">EDD</button>
+        <button type="button" data-rule="LPT">LPT</button>
+      </div>
+      <span class="tag" id="ruleTag">FCFS</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Sequence</span>
+      <div class="chips" id="chips"></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Schedule">
+    <div class="row" style="justify-content: space-between">
+      <h2>Schedule as time passes</h2>
+      <div class="legend">
+        <span><i class="lg" style="background: var(--j1); opacity:.22; outline: 1px dashed var(--j1)"></i>waiting</span>
+        <span><i class="lg" style="background: var(--j1)"></i>being processed</span>
+        <span><i class="lg" style="background: var(--late)"></i>late</span>
+        <span>▼ due date</span>
+      </div>
+    </div>
+    <div class="player">
+      <button class="btn" id="play" type="button">Play</button>
+      <button class="btn ghost" id="stepBtn" type="button">+1 step</button>
+      <input type="range" id="time" min="0" max="28" step="0.1" value="28" aria-label="Time">
+      <span class="clock" id="clock"></span>
+    </div>
+    <p class="readout" id="readout"></p>
+    <div class="scroll"><svg id="gantt" role="img" aria-label="Schedule chart"></svg></div>
+  </section>
+
+  <section class="panel" aria-label="Jobs in the system">
+    <h2>Jobs in the system</h2>
+    <p class="note">Each unfinished job adds one time unit of flow time per time unit. The shaded area under this line is the total flow time.</p>
+    <div class="scroll"><svg id="wip" role="img" aria-label="Jobs in the system over time"></svg></div>
+  </section>
+
+  <section class="panel" aria-label="Results">
+    <h2>Results for this sequence</h2>
+    <div class="kpis" id="kpis"></div>
+    <div class="scroll"><table id="compare"></table></div>
+    <p class="takeaway" id="takeaway"></p>
+  </section>
+  <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="../home.html">← All simulations</a></nav>
+</div>
+
+<script>
+const DATA = {
+  sethi: {
+    unit: "day", units: "days", start: "Day",
+    note: "Jobs in order of arrival. Today is day 1 and work begins today.",
+    jobs: [ {id:"A",p:6,d:8}, {id:"B",p:2,d:6}, {id:"C",p:8,d:18}, {id:"D",p:3,d:15}, {id:"E",p:9,d:23} ]
+  },
+  tts: {
+    unit: "min", units: "min", start: "Minute",
+    note: "Clock starts at 08:00 (time 0). Due = promised pick-up.",
+    jobs: [ {id:"A",p:50,d:90}, {id:"B",p:20,d:45}, {id:"C",p:90,d:240}, {id:"D",p:30,d:120}, {id:"E",p:70,d:180} ]
+  }
+};
+const COLORS = ["--j1","--j2","--j3","--j4","--j5"];
+const RULES = {
+  FCFS: (j) => j.slice(),
+  SPT:  (j) => j.slice().sort((a,b) => a.p - b.p || a.i - b.i),
+  EDD:  (j) => j.slice().sort((a,b) => a.d - b.d || a.i - b.i),
+  LPT:  (j) => j.slice().sort((a,b) => b.p - a.p || a.i - b.i)
+};
+const S = { ds: "sethi", rule: "FCFS", order: [], t: 0, playing: false };
+
+function jobs() { return DATA[S.ds].jobs.map((j, i) => ({...j, i, c: `var(${COLORS[i]})`})); }
+function schedule(order) {
+  let t = 0;
+  return order.map(j => { const start = t; t += j.p; return {...j, start, end: t, late: Math.max(0, t - j.d)}; });
+}
+function kpis(sch) {
+  const n = sch.length, total = sch.reduce((s,j) => s + j.end, 0), work = sch.reduce((s,j) => s + j.p, 0);
+  const lateSum = sch.reduce((s,j) => s + j.late, 0);
+  return { n, total, work, avgFlow: total/n, util: work/total, avgJobs: total/work, avgLate: lateSum/n, lateSum, nLate: sch.filter(j => j.late > 0).length, maxLate: Math.max(...sch.map(j => j.late)) };
+}
+const fmt = (x, d=1) => Number.isInteger(x) ? String(x) : x.toFixed(d);
+const seqStr = (o) => o.map(j => j.id).join("-");
+function niceStep(range) { const raw = range / 10, p = Math.pow(10, Math.floor(Math.log10(raw))); for (const m of [1,2,5,10]) if (m*p >= raw) return m*p; return 10*p; }
+
+function setRule(r) { S.rule = r; S.order = RULES[r](jobs()); refresh(true); }
+function move(k, dir) {
+  const o = S.order.slice(), m = k + dir; [o[k], o[m]] = [o[m], o[k]]; S.order = o;
+  const match = Object.keys(RULES).find(r => seqStr(RULES[r](jobs())) === seqStr(o));
+  S.rule = match || "Own";
+  refresh(true);
+}
+
+function renderControls() {
+  document.querySelectorAll("#rules button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.rule === S.rule)));
+  document.getElementById("ruleTag").textContent = S.rule === "Own" ? "Your own sequence" : S.rule;
+  document.getElementById("dsNote").textContent = DATA[S.ds].note;
+  const u = DATA[S.ds].units;
+  document.getElementById("chips").innerHTML = S.order.map((j, k) =>
+    (k ? '<span class="arrow" aria-hidden="true">→</span>' : "") +
+    `<span class="chip"><i class="sw" style="background:${j.c}"></i><b>${j.id}</b><small>${j.p} ${u}, due ${j.d}</small>` +
+    `<button type="button" aria-label="Move ${j.id} earlier" data-k="${k}" data-dir="-1" ${k === 0 ? "disabled" : ""}>◀</button>` +
+    `<button type="button" aria-label="Move ${j.id} later" data-k="${k}" data-dir="1" ${k === S.order.length - 1 ? "disabled" : ""}>▶</button></span>`
+  ).join("");
+}
+
+function axis(x, T, y, top) {
+  const st = niceStep(T); let s = "";
+  for (let v = 0; v <= T + 1e-9; v += st) {
+    const X = x(v);
+    s += `<line x1="${X}" x2="${X}" y1="${top}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    s += `<text x="${X}" y="${y + 16}" text-anchor="middle" font-size="12" class="muted mono">${v}</text>`;
+  }
+  return s;
+}
+
+function renderGantt(sch, k) {
+  const T = Math.max(k.work, ...sch.map(j => j.d)), t = S.t, u = DATA[S.ds].units;
+  const L = 70, R = 740, W = 900, rowH = 34, top = 20;
+  const x = v => L + v / T * (R - L);
+  const H = top + 40 + sch.length * rowH + 50;
+  let s = `<text x="0" y="${top + 20}" font-size="13" font-weight="700">Work centre</text>`;
+  sch.forEach(j => {
+    if (t <= j.start) return;
+    const e = Math.min(t, j.end);
+    s += `<rect x="${x(j.start)}" y="${top + 4}" width="${Math.max(0, x(e) - x(j.start))}" height="26" fill="${j.c}" rx="3"/>`;
+    if (x(e) - x(j.start) > 18) s += `<text x="${(x(j.start) + x(e)) / 2}" y="${top + 22}" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--panel)">${j.id}</text>`;
+  });
+  const y0 = top + 46;
+  sch.forEach((j, r) => {
+    const y = y0 + r * rowH, cy = y + 13;
+    s += `<text x="0" y="${cy + 5}" font-size="13" font-weight="700">Job ${j.id}</text>`;
+    s += `<line x1="${L}" x2="${R}" y1="${y + 28}" y2="${y + 28}" stroke="var(--line)"/>`;
+    const w = Math.min(t, j.start);
+    if (w > 0) s += `<rect x="${x(0)}" y="${y + 4}" width="${x(w) - x(0)}" height="18" fill="${j.c}" fill-opacity="0.18" stroke="${j.c}" stroke-dasharray="4 3" rx="3"/>`;
+    if (t > j.start) {
+      const e = Math.min(t, j.end), lateFrom = Math.max(j.start, j.d);
+      s += `<rect x="${x(j.start)}" y="${y + 4}" width="${x(e) - x(j.start)}" height="18" fill="${j.c}" rx="3"/>`;
+      if (j.late > 0 && e > lateFrom) s += `<rect x="${x(lateFrom)}" y="${y + 23}" width="${x(e) - x(lateFrom)}" height="4" fill="var(--late)"/>`;
+    }
+    s += `<text x="${x(j.d)}" y="${y + 3}" text-anchor="middle" font-size="11" style="fill:var(--late)">▼</text>`;
+    const done = t >= j.end - 1e-9;
+    const label = done ? `F = ${j.end}` + (j.late ? `  (late ${j.late})` : "") : (t > j.start ? "in process" : (t > 0 ? "waiting" : ""));
+    s += `<text x="${done ? x(j.end) + 6 : x(Math.max(t, 0)) + 6}" y="${cy + 4}" font-size="12" class="mono${done ? "" : " muted"}" ${done && j.late ? 'style="fill:var(--late)"' : ""}>${label}</text>`;
+  });
+  const yb = y0 + sch.length * rowH + 4;
+  s = axis(x, T, yb, top) + s;
+  s += `<text x="${R}" y="${yb + 32}" text-anchor="end" font-size="12" class="muted">${u}</text>`;
+  s += `<line x1="${x(t)}" x2="${x(t)}" y1="${top - 6}" y2="${yb}" stroke="var(--navy)" stroke-width="2"/>`;
+  const g = document.getElementById("gantt");
+  g.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  g.innerHTML = s;
+}
+
+function renderWip(sch, k) {
+  const T = Math.max(k.work, ...sch.map(j => j.d)), t = S.t, n = sch.length;
+  const L = 70, R = 740, W = 900, top = 14, bot = 170, H = 210;
+  const x = v => L + v / T * (R - L), y = c => bot - c / n * (bot - top);
+  const ends = sch.map(j => j.end);
+  const count = v => ends.filter(e => e > v + 1e-9).length;
+  const pts = [[0, n]];
+  sch.forEach(j => { pts.push([j.end, count(j.end - 1e-6)]); pts.push([j.end, count(j.end)]); });
+  const path = pts.map(([a,b], i) => `${i ? "L" : "M"}${x(a)},${y(b)}`).join(" ");
+  const tc = Math.min(t, k.work), area = [[0, n]];
+  sch.forEach(j => { if (j.end <= tc) { area.push([j.end, count(j.end - 1e-6)]); area.push([j.end, count(j.end)]); } });
+  area.push([tc, count(Math.max(0, tc - 1e-6))]);
+  const ap = `M${x(0)},${y(0)} ` + area.map(([a,b]) => `L${x(a)},${y(b)}`).join(" ") + ` L${x(tc)},${y(0)} Z`;
+  let s = "";
+  for (let c = 0; c <= n; c++) s += `<line x1="${L}" x2="${R}" y1="${y(c)}" y2="${y(c)}" stroke="var(--line)"/><text x="${L - 10}" y="${y(c) + 4}" text-anchor="end" font-size="12" class="muted mono">${c}</text>`;
+  s += axis(x, T, bot, bot);
+  s += `<path d="${ap}" fill="var(--accent)" fill-opacity="0.28"/>`;
+  s += `<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  s += `<line x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${bot}" stroke="var(--navy)" stroke-width="2"/>`;
+  s += `<text x="${L - 50}" y="${top + 6}" font-size="12" class="muted">jobs</text>`;
+  const g = document.getElementById("wip");
+  g.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  g.innerHTML = s;
+}
+
+function renderReadout(sch, k) {
+  const t = S.t, u = DATA[S.ds].units, unit = DATA[S.ds].unit;
+  const inProc = sch.find(j => t >= j.start && t < j.end);
+  const waiting = sch.filter(j => t < j.start), done = sch.filter(j => t >= j.end - 1e-9);
+  const acc = sch.reduce((s,j) => s + Math.min(t, j.end), 0);
+  document.getElementById("clock").textContent = `${DATA[S.ds].start} ${fmt(t)}`;
+  let msg = `At ${fmt(t)} ${u}: <strong>${sch.length - done.length} jobs in the system</strong>`;
+  if (inProc) msg += ` (${inProc.id} in process${waiting.length ? ", " + waiting.map(j => j.id).join(", ") + " waiting" : ""})`;
+  msg += `. Flow time built up so far: <strong>${fmt(acc)} job-${unit}s</strong>`;
+  if (done.length === sch.length) msg += ` = total flow time. Average flow time = ${k.total} / ${k.n} = <strong>${fmt(k.avgFlow)} ${u}</strong>.`;
+  else msg += ".";
+  document.getElementById("readout").innerHTML = msg;
+}
+
+function renderResults(k) {
+  const u = DATA[S.ds].units;
+  const tiles = [
+    ["Avg flow time", `${fmt(k.avgFlow)} ${u}`, `Σ flow ${k.total} / ${k.n} jobs`],
+    ["Utilisation", `${(k.util * 100).toFixed(1)}%`, `Σ work ${k.work} / Σ flow ${k.total}`],
+    ["Avg jobs in system", fmt(k.avgJobs, 2), `Σ flow ${k.total} / Σ work ${k.work}`],
+    ["Avg lateness", `${fmt(k.avgLate)} ${u}`, `Σ late ${k.lateSum} / ${k.n} jobs`],
+    ["Jobs late", `${k.nLate} of ${k.n}`, `max lateness ${k.maxLate}`]
+  ];
+  document.getElementById("kpis").innerHTML = tiles.map(([a,b,c]) => `<div class="kpi"><span class="k">${a}</span><span class="v">${b}</span><span class="f">${c}</span></div>`).join("");
+
+  const rows = Object.keys(RULES).map(r => { const o = RULES[r](jobs()); return {r, seq: seqStr(o), k: kpis(schedule(o))}; });
+  if (S.rule === "Own") rows.push({r: "Yours", seq: seqStr(S.order), k});
+  const cols = [
+    ["Avg flow", x => x.avgFlow, "min", x => fmt(x.avgFlow)],
+    ["Utilisation", x => x.util, "max", x => (x.util * 100).toFixed(1) + "%"],
+    ["Avg jobs", x => x.avgJobs, "min", x => fmt(x.avgJobs, 2)],
+    ["Avg lateness", x => x.avgLate, "min", x => fmt(x.avgLate)],
+    ["Jobs late", x => x.nLate, "min", x => String(x.nLate)]
+  ];
+  const best = cols.map(([, f, m]) => (m === "min" ? Math.min : Math.max)(...rows.map(r => f(r.k))));
+  const cur = S.rule === "Own" ? "Yours" : S.rule;
+  document.getElementById("compare").innerHTML =
+    `<thead><tr><th>Rule</th><th>Sequence</th>${cols.map(c => `<th>${c[0]}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(row => `<tr class="${row.r === cur ? "current" : ""}"><td><b>${row.r}</b></td><td class="mono">${row.seq}</td>` +
+      cols.map(([, f, , show], i) => `<td class="${Math.abs(f(row.k) - best[i]) < 1e-9 ? "best" : ""}">${show(row.k)}</td>`).join("") + "</tr>").join("") + "</tbody>";
+
+  document.getElementById("takeaway").innerHTML = "<b>Why the order matters:</b> the total work is the same under every rule, but each job that waits keeps adding flow time. Doing short jobs first (SPT) empties the system fastest, so the area under the jobs-in-system line, and the average flow time, is smallest. EDD protects due dates instead.";
+}
+
+function refresh(resetTime) {
+  const sch = schedule(S.order), k = kpis(sch);
+  const slider = document.getElementById("time");
+  slider.max = k.work;
+  if (resetTime) S.t = k.work;
+  slider.value = S.t;
+  renderControls(); renderGantt(sch, k); renderWip(sch, k); renderReadout(sch, k); renderResults(k);
+}
+function drawTime() {
+  const sch = schedule(S.order), k = kpis(sch);
+  document.getElementById("time").value = S.t;
+  renderGantt(sch, k); renderWip(sch, k); renderReadout(sch, k);
+}
+
+let last = 0;
+function tick(ts) {
+  if (!S.playing) return;
+  const total = kpis(schedule(S.order)).work;
+  if (last) S.t = Math.min(total, S.t + (ts - last) / 1000 * total / 8);
+  last = ts;
+  drawTime();
+  if (S.t >= total) { stop(); return; }
+  requestAnimationFrame(tick);
+}
+function stop() { S.playing = false; last = 0; document.getElementById("play").textContent = "Play"; }
+document.getElementById("play").addEventListener("click", () => {
+  if (S.playing) { stop(); return; }
+  const total = kpis(schedule(S.order)).work;
+  if (S.t >= total) S.t = 0;
+  S.playing = true; document.getElementById("play").textContent = "Pause";
+  requestAnimationFrame(tick);
+});
+document.getElementById("stepBtn").addEventListener("click", () => {
+  stop();
+  const total = kpis(schedule(S.order)).work, st = S.ds === "tts" ? 10 : 1;
+  S.t = S.t >= total ? 0 : Math.min(total, Math.floor(S.t / st + 1e-9) * st + st);
+  drawTime();
+});
+document.getElementById("time").addEventListener("input", e => { stop(); S.t = Number(e.target.value); drawTime(); });
+document.getElementById("rules").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { stop(); setRule(b.dataset.rule); } });
+document.getElementById("chips").addEventListener("click", e => { const b = e.target.closest("button[data-k]"); if (b) { stop(); move(Number(b.dataset.k), Number(b.dataset.dir)); } });
+document.getElementById("dataset").addEventListener("change", e => {
+  stop(); S.ds = e.target.value;
+  document.getElementById("time").step = S.ds === "tts" ? "1" : "0.1";
+  setRule("FCFS");
+});
+setRule("FCFS");
+</script>
+<script src="../shared/fullscreen.js"></script>
+</body>
+</html>
