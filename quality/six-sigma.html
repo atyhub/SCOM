@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Six Sigma Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: controls, the normal curve with spec limits and a sigma ruler, KPIs, then the sigma-level table and questions. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1f2a33; --muted: #5d6b76; --line: #d9dfe5;
+  --accent: #1b7f79; --accent-soft: #e3f1ef; --navy: #1f3a5f; --bad: #c0392b; --bad-soft: #f8e1de;
+  --curve: #2f6db5; --curve-fill: rgba(47,109,181,.14); --shift: #d9822b;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+    --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --bad: #ff7a6b; --bad-soft: #3a2220;
+    --curve: #6fa3e6; --curve-fill: rgba(111,163,230,.18); --shift: #f0a35a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+  --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --bad: #ff7a6b; --bad-soft: #3a2220;
+  --curve: #6fa3e6; --curve-fill: rgba(111,163,230,.18); --shift: #f0a35a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 800 clamp(28px, 4vw, 40px)/1.1 var(--f-display); margin: 0; color: var(--navy); text-wrap: balance; }
+h2 { font: 700 18px/1.2 var(--f-display); margin: 0; color: var(--navy); }
+.lede { margin: 0; max-width: 72ch; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+label.lbl { font: 600 12px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: inherit; color: var(--ink); background: var(--panel); border: 0; border-right: 1px solid var(--line); padding: 7px 14px; cursor: pointer; font-weight: 700; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--accent-soft); }
+.slider { display: grid; grid-template-columns: minmax(150px, 220px) 1fr 9ch; gap: 10px; align-items: center; }
+.slider output { font: 600 15px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; font-weight: 600; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--shift); }
+.readout { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); max-width: 80ch; }
+.readout strong { color: var(--navy); }
+.scroll { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 600px; height: auto; font-family: var(--f-body); }
+svg text { fill: var(--ink); }
+svg .muted { fill: var(--muted); }
+svg .mono { font-family: var(--f-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 22px; height: 10px; border-radius: 2px; display: inline-block; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.kpi .k { font: 600 12px/1.3 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.kpi .v { font: 800 26px/1.15 var(--f-display); color: var(--navy); font-variant-numeric: tabular-nums; }
+.kpi .v.bad { color: var(--bad); }
+.kpi .f { font: 12px/1.4 var(--f-mono); color: var(--muted); }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+th.barcol, td.barcol { text-align: left; width: 30%; }
+thead th { background: var(--accent); color: var(--panel); font-weight: 700; font-size: 14px; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--accent-soft); }
+tbody tr.current { background: var(--accent-soft); font-weight: 700; }
+.bar { height: 10px; border-radius: 2px; background: var(--bad); min-width: 2px; }
+.note { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
+.takeaway { border-left: 4px solid var(--accent); padding: 4px 0 4px 12px; margin: 0; max-width: 80ch; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.concept { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.concept h3 { margin: 0; font: 700 15px/1.3 var(--f-display); color: var(--navy); }
+.concept p { margin: 0; font-size: 15px; }
+.formula { font: 600 14px var(--f-mono); color: var(--accent); }
+details { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details + details { margin-top: -4px; }
+summary { cursor: pointer; font-weight: 700; }
+details p { margin: 8px 0 0; }
+.btn { font: inherit; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; }
+.btn:hover { background: var(--accent-soft); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 560px) { .slider { grid-template-columns: 1fr 8ch; } .slider label { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.sim-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}.sim-nav a{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none}.sim-nav a:hover{color:var(--accent)}.sim-nav-end{justify-content:center;padding-top:8px;border-top:1px solid var(--line)}
+.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent)}.fs-btn[hidden]{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="sim-nav" aria-label="Site"><a href="../home.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
+  <header>
+    <span class="eyebrow">Quality Management · Six Sigma</span>
+    <h1>Six Sigma Explorer</h1>
+    <p class="lede">Sigma (σ) is the standard deviation: the typical spread of a process. The <b>sigma level</b> counts how many of those σ fit between the process mean and the nearest specification limit. Shrink the spread, and more σ fit inside the limits, so fewer units fall outside. The example is a 400 g salmon fillet pack with a contract range of 390 to 410 g.</p>
+  </header>
+
+  <section class="panel" aria-label="Controls">
+    <div class="row">
+      <label class="lbl" id="lvl-lbl">Quick pick: sigma level</label>
+      <div class="seg" role="group" aria-labelledby="lvl-lbl" id="levels"></div>
+    </div>
+    <div class="slider">
+      <label class="lbl" for="sd">Process spread <span style="text-transform:none">σ</span> (g)</label>
+      <input type="range" id="sd" min="0.8" max="12" step="any" value="3.33">
+      <output id="sd-out" for="sd"></output>
+    </div>
+    <div class="slider">
+      <label class="lbl" for="mu">Process mean <span style="text-transform:none">μ</span> (g)</label>
+      <input type="range" id="mu" min="392" max="408" step="0.1" value="400">
+      <output id="mu-out" for="mu"></output>
+    </div>
+    <div class="row">
+      <label class="toggle"><input type="checkbox" id="shift"> Add the long-term 1.5σ drift (the Six Sigma convention)</label>
+      <button type="button" class="btn" id="reset">Reset</button>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Normal curve">
+    <div class="row" style="justify-content:space-between">
+      <h2>Pack weights on the normal curve</h2>
+      <div class="legend">
+        <span><i class="lg" style="background:var(--curve-fill);border:1px solid var(--curve)"></i>Inside the limits</span>
+        <span><i class="lg" style="background:var(--bad)"></i>Defects: outside the limits</span>
+        <span id="lg-shift" hidden><i class="lg" style="background:var(--shift)"></i>Drifted process</span>
+      </div>
+    </div>
+    <div class="scroll"><svg id="chart" viewBox="0 0 960 440" role="img" aria-label="Normal curve of pack weights with specification limits"></svg></div>
+    <p class="readout" id="readout"></p>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Results"></section>
+
+  <section class="panel" aria-label="Sigma level table">
+    <h2>Each extra sigma is a giant step</h2>
+    <p class="note">Defects per million opportunities (DPMO) at each sigma level, with a centred process and with the 1.5σ drift. The bars use a log scale: each tick to the left is ten times fewer defects. Click a row to load that level. The drift column follows the standard Six Sigma table, which counts only the tail on the side the mean drifts towards.</p>
+    <div class="scroll"><table id="table"></table></div>
+    <p class="takeaway" id="takeaway"></p>
+  </section>
+
+  <section class="panel" aria-label="Key ideas">
+    <h2>Key ideas</h2>
+    <div class="concepts">
+      <div class="concept"><h3>σ is the process, the limits are the customer</h3><p>The specification limits (390 and 410 g) come from the customer. σ comes from the process. Six Sigma improves quality by reducing σ, not by widening the limits.</p></div>
+      <div class="concept"><h3>Sigma level</h3><p class="formula">Z = min(USL − μ, μ − LSL) / σ</p><p>How many standard deviations fit between the mean and the nearest limit. Z = 3 × Cpk.</p></div>
+      <div class="concept"><h3>Six Sigma = 3.4 DPMO</h3><p>With the 1.5σ long-term drift, a six sigma process produces 3.4 defects per million. Without drift, it would be about 2 per billion.</p></div>
+      <div class="concept"><h3>Why the 1.5σ drift?</h3><p>Over months, materials, people and machines shift the mean. Motorola assumed a drift of about 1.5σ, so a process that is six sigma in the short run behaves like 4.5σ in the long run.</p></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Check your understanding">
+    <h2>Check your understanding</h2>
+    <details><summary>1. Set σ = 5 g with μ = 400 g. What is the sigma level, and roughly what share of packs is outside 390 to 410 g?</summary><p>Z = 10 / 5 = 2. Without drift, about 4.6 % of packs are outside (45,500 DPMO): 2.3 % in each tail. That is about 27,000 bad packs a year at 600,000 packs.</p></details>
+    <details><summary>2. How small must σ be for the pack line to reach six sigma (centred at 400 g)?</summary><p>σ = 10 / 6 ≈ 1.67 g. The limits stay at 390 to 410 g; only the spread shrinks.</p></details>
+    <details><summary>3. Keep σ = 1.67 g but move the mean to 402 g. What happens to the sigma level, and why?</summary><p>Z = (410 − 402) / 1.67 ≈ 4.8. The nearest limit is now only 8 g away. Off-centre processes lose sigma level even when the spread is unchanged, which is the same idea as Cpk being lower than Cp.</p></details>
+    <details><summary>4. Going from 3σ to 4σ cuts the drifted DPMO from 66,807 to 6,210. What does going from 5σ to 6σ do?</summary><p>From 233 to 3.4 DPMO, about 70 times fewer defects. Each step removes most of the remaining defects, which is why the last sigmas are the hardest and most expensive to earn.</p></details>
+  </section>
+
+  <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="../home.html">← All simulations</a></nav>
+</div>
+
+<script>
+const LSL = 390, USL = 410, TARGET = 400, PACKS_YEAR = 600000;
+const XMIN = 360, XMAX = 440;
+const $ = id => document.getElementById(id);
+const sd = $("sd"), mu = $("mu"), shift = $("shift");
+
+/* Upper-tail probability Q(z) = P(Z > z), accurate in relative terms far into the tail (W. J. Cody style rational approximation via erfc). */
+function erfc(x) {
+  const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+  const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+    t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  return x >= 0 ? r : 2 - r;
+}
+const Q = z => 0.5 * erfc(z / Math.SQRT2);
+const pdf = (x, m, s) => Math.exp(-0.5 * ((x - m) / s) ** 2) / (s * Math.sqrt(2 * Math.PI));
+
+function fmtDPMO(v) {
+  if (v >= 100) return Math.round(v).toLocaleString("en-US");
+  if (v >= 1) return v.toFixed(1);
+  if (v >= 0.01) return v.toFixed(3);
+  return v.toExponential(1).replace("e-", " × 10⁻").replace(/⁻(\d+)/, (_, d) => "⁻" + [...d].map(c => "⁰¹²³⁴⁵⁶⁷⁸⁹"[c]).join(""));
+}
+const fmtInt = v => v >= 1 ? Math.round(v).toLocaleString("en-US") : (v >= 0.01 ? v.toFixed(2) : "< 0.01");
+const pct = v => v >= 0.99995 ? (v * 100).toFixed(5) : (v * 100).toFixed(2);
+
+function state() {
+  const s = +sd.value, m = +mu.value, drift = shift.checked;
+  const z = Math.min(USL - m, m - LSL) / s;               // sigma level (short-term)
+  // the drift moves the mean 1.5σ towards the nearer limit (towards USL when centred)
+  const dir = (USL - m) <= (m - LSL) ? 1 : -1;
+  const mLong = drift ? m + dir * 1.5 * s : m;
+  // Six Sigma tables count only the tail on the drift side; the far tail is ignored by convention
+  const pOut = drift ? (dir > 0 ? Q((USL - mLong) / s) : Q((mLong - LSL) / s)) : Q((USL - m) / s) + Q((m - LSL) / s);
+  return { s, m, drift, z, mLong, pOut, dpmo: pOut * 1e6, cp: (USL - LSL) / (6 * s), cpk: z / 3 };
+}
+
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function draw(st) {
+  const svg = $("chart"); svg.innerHTML = "";
+  const W = 960, H = 440, L = 40, R = 20, T = 56, B = 104;
+  const px = x => L + (x - XMIN) / (XMAX - XMIN) * (W - L - R);
+  const peak = pdf(0, 0, Math.max(st.s, 1.2));               // keep the y scale stable for small σ
+  const yMax = Math.max(pdf(st.m, st.m, st.s), peak) * 1.08;
+  const py = y => H - B - y / yMax * (H - T - B);
+  const curvePts = (m, a, b) => { const pts = []; const n = 220; for (let i = 0; i <= n; i++) { const x = a + (b - a) * i / n; pts.push([px(x), py(pdf(x, m, st.s))]); } return pts; };
+  const area = (m, a, b) => { if (b <= a) return ""; const p = curvePts(m, a, b); return `M${p[0][0]},${py(0)} ` + p.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${p[p.length - 1][0]},${py(0)} Z`; };
+  const line = (m) => "M" + curvePts(m, XMIN, XMAX).map(q => q.join(",")).join(" L");
+
+  // axis and ticks
+  svg.append(el("line", { x1: L, x2: W - R, y1: py(0), y2: py(0), stroke: "var(--muted)" }));
+  for (let x = XMIN; x <= XMAX; x += 5) {
+    svg.append(el("line", { x1: px(x), x2: px(x), y1: py(0), y2: py(0) + 5, stroke: "var(--muted)" }));
+    if (x % 10 === 0) svg.append(el("text", { x: px(x), y: py(0) + 20, "text-anchor": "middle", class: "muted mono", "font-size": 12 }, x));
+  }
+  svg.append(el("text", { x: (L + W - R) / 2, y: H - 12, "text-anchor": "middle", class: "muted", "font-size": 13 }, "Pack weight (g)"));
+
+  const mDraw = st.mLong;
+  // in-spec area and defect tails for the process that produces the defects
+  svg.append(el("path", { d: area(mDraw, LSL, USL), fill: "var(--curve-fill)" }));
+  svg.append(el("path", { d: area(mDraw, XMIN, LSL), fill: "var(--bad)", opacity: .85 }));
+  svg.append(el("path", { d: area(mDraw, USL, XMAX), fill: "var(--bad)", opacity: .85 }));
+  if (st.drift) {
+    svg.append(el("path", { d: line(st.m), fill: "none", stroke: "var(--curve)", "stroke-width": 2, "stroke-dasharray": "6 5" }));
+    svg.append(el("path", { d: line(mDraw), fill: "none", stroke: "var(--shift)", "stroke-width": 2.5 }));
+    const ya = py(pdf(st.m, st.m, st.s)) - 10;
+    svg.append(el("line", { x1: px(st.m), x2: px(mDraw), y1: ya, y2: ya, stroke: "var(--shift)", "stroke-width": 2, "marker-end": "url(#arr)" }));
+  } else {
+    svg.append(el("path", { d: line(st.m), fill: "none", stroke: "var(--curve)", "stroke-width": 2.5 }));
+  }
+  const defs = el("defs", {});
+  const mk = el("marker", { id: "arr", viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto" });
+  mk.append(el("path", { d: "M0,0 L10,5 L0,10 z", fill: "var(--shift)" })); defs.append(mk); svg.append(defs);
+
+  // spec limits and target
+  for (const [x, lab] of [[LSL, "LSL 390"], [USL, "USL 410"]]) {
+    svg.append(el("line", { x1: px(x), x2: px(x), y1: T - 22, y2: py(0), stroke: "var(--bad)", "stroke-width": 2 }));
+    svg.append(el("text", { x: px(x), y: T - 28, "text-anchor": "middle", "font-size": 13, "font-weight": 700, fill: "var(--bad)" }, lab));
+  }
+  svg.append(el("line", { x1: px(TARGET), x2: px(TARGET), y1: T - 8, y2: py(0), stroke: "var(--muted)", "stroke-dasharray": "2 4" }));
+  svg.append(el("text", { x: px(TARGET), y: T - 12, "text-anchor": "middle", class: "muted", "font-size": 12 }, "target 400"));
+
+  // sigma ruler: steps of σ from the mean towards the nearest limit
+  const dir = (USL - st.m) <= (st.m - LSL) ? 1 : -1;
+  const limit = dir > 0 ? USL : LSL;
+  const yR = py(0) + 52;
+  const full = Math.floor(st.z + 1e-9);
+  const maxSteps = Math.min(full, 12);
+  for (let i = 0; i < maxSteps; i++) {
+    const a = st.m + dir * i * st.s, b = st.m + dir * (i + 1) * st.s;
+    svg.append(el("rect", { x: Math.min(px(a), px(b)) + 1, y: yR - 11, width: Math.abs(px(b) - px(a)) - 2, height: 18, rx: 3, fill: i % 2 ? "var(--accent)" : "var(--navy)", opacity: .85 }));
+    if (Math.abs(px(b) - px(a)) > 16) svg.append(el("text", { x: (px(a) + px(b)) / 2, y: yR + 3, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "var(--panel)" }, i + 1));
+  }
+  const rest = st.m + dir * full * st.s;
+  if (st.z - full > 0.02 && full <= 12) {
+    svg.append(el("rect", { x: Math.min(px(rest), px(limit)) + 1, y: yR - 11, width: Math.max(0, Math.abs(px(limit) - px(rest)) - 2), height: 18, rx: 3, fill: "none", stroke: "var(--accent)", "stroke-dasharray": "3 2" }));
+  }
+  svg.append(el("line", { x1: px(st.m), x2: px(st.m), y1: py(0) + 26, y2: yR + 10, stroke: "var(--ink)", "stroke-width": 1.5 }));
+  svg.append(el("text", { x: px(st.m) - dir * 6, y: yR + 4, "text-anchor": dir > 0 ? "end" : "start", "font-size": 13, "font-weight": 700 }, `σ ruler, mean to ${dir > 0 ? "USL" : "LSL"}: ${st.z.toFixed(2)} σ`));
+}
+
+function render() {
+  const st = state();
+  $("sd-out").textContent = st.s.toFixed(2) + " g";
+  $("mu-out").textContent = st.m.toFixed(1) + " g";
+  $("lg-shift").hidden = !st.drift;
+  document.querySelectorAll("#levels button").forEach(b => b.setAttribute("aria-pressed", String(Math.abs(st.z - +b.dataset.k) < 0.02 && Math.abs(st.m - TARGET) < 0.05)));
+  draw(st);
+
+  const badYear = st.pOut * PACKS_YEAR;
+  $("readout").innerHTML = `With σ = <strong>${st.s.toFixed(2)} g</strong>, <strong>${st.z.toFixed(2)}</strong> standard deviations fit between the mean and the nearest limit, so this is a <strong>${st.z.toFixed(1)} sigma</strong> process. ` +
+    (st.drift ? `After the 1.5σ drift the mean sits at ${st.mLong.toFixed(1)} g, ` : "") +
+    `<strong>${pct(1 - st.pOut)} %</strong> of packs are inside 390 to 410 g, and about <strong>${fmtInt(badYear)}</strong> of 600,000 packs a year are outside.`;
+
+  const kp = [
+    ["Sigma level", st.z.toFixed(2), "Z = nearest gap / σ"],
+    ["DPMO", fmtDPMO(st.dpmo), st.drift ? "with 1.5σ drift" : "centred, no drift", st.dpmo > 1000],
+    ["Yield", pct(1 - st.pOut) + " %", "share inside the limits"],
+    ["Bad packs per year", fmtInt(badYear), "of 600,000 packs", badYear >= 1000],
+    ["Cp", st.cp.toFixed(2), "(USL − LSL) / 6σ"],
+    ["Cpk", st.cpk.toFixed(2), "Z / 3"],
+  ];
+  $("kpis").innerHTML = kp.map(([k, v, f, bad]) => `<div class="kpi"><span class="k">${k}</span><span class="v${bad ? " bad" : ""}">${v}</span><span class="f">${f}</span></div>`).join("");
+
+  // table
+  const rows = [1, 2, 3, 4, 5, 6].map(k => {
+    const c = 2 * Q(k) * 1e6, d = Q(k - 1.5) * 1e6;
+    return { k, c, d };
+  });
+  const sel = st.drift ? "d" : "c";
+  const logw = v => Math.max(0, Math.log10(Math.max(v, 1e-3)) + 3) / 9 * 100;  // 0.001 .. 1,000,000 on a log scale
+  $("table").innerHTML = `<thead><tr><th>Sigma level</th><th>σ for 390–410 g</th><th>DPMO centred</th><th>DPMO with 1.5σ drift</th><th>Bad packs per year*</th><th class="barcol">DPMO (log scale)</th></tr></thead><tbody>` +
+    rows.map(r => `<tr data-k="${r.k}" class="${Math.abs(st.z - r.k) < 0.02 && Math.abs(st.m - TARGET) < 0.05 ? "current" : ""}"><td>${r.k}σ</td><td>${(10 / r.k).toFixed(2)} g</td><td>${fmtDPMO(r.c)}</td><td>${fmtDPMO(r.d)}</td><td>${fmtInt(r[sel] * PACKS_YEAR / 1e6)}</td><td class="barcol"><div class="bar" style="width:${logw(r[sel]).toFixed(1)}%"></div></td></tr>`).join("") +
+    `</tbody>`;
+  $("table").querySelectorAll("tbody tr").forEach(tr => tr.addEventListener("click", () => setLevel(+tr.dataset.k)));
+  $("takeaway").innerHTML = `*Bad packs per year use the ${st.drift ? "drifted" : "centred"} column. Going from 3σ to 6σ (with drift) takes Nordfjord from about <b>40,000</b> bad packs a year to about <b>2</b>.`;
+}
+
+function setLevel(k) { mu.value = TARGET; sd.value = (10 / k).toFixed(4); render(); }
+$("levels").innerHTML = [1, 2, 3, 4, 5, 6].map(k => `<button type="button" data-k="${k}" aria-pressed="false">${k}σ</button>`).join("");
+$("levels").querySelectorAll("button").forEach(b => b.addEventListener("click", () => setLevel(+b.dataset.k)));
+[sd, mu, shift].forEach(e => e.addEventListener("input", render));
+$("reset").addEventListener("click", () => { shift.checked = false; setLevel(3); });
+setLevel(3);
+</script>
+<script src="../shared/fullscreen.js"></script>
+</body>
+</html>
