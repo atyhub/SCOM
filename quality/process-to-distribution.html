@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>From Process to Distribution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: controls, production canvas (machine, falling panels, dot histogram), run chart, KPI cards, parameters and presets, ideas, questions. */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1f2a33; --muted: #5d6b76; --line: #d9dfe5;
+  --accent: #1b7f79; --accent-soft: #e3f1ef; --navy: #1f3a5f; --bad: #c0392b; --bad-soft: #f8e1de;
+  --curve: #2f6db5; --curve-fill: rgba(47,109,181,.14); --shift: #d9822b;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+    --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --bad: #ff7a6b; --bad-soft: #3a2220;
+    --curve: #6fa3e6; --curve-fill: rgba(111,163,230,.18); --shift: #f0a35a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12181d; --panel: #1a2229; --ink: #e6ebef; --muted: #9aa8b3; --line: #2e3a44;
+  --accent: #4fc1b8; --accent-soft: #173431; --navy: #9cc0ea; --bad: #ff7a6b; --bad-soft: #3a2220;
+  --curve: #6fa3e6; --curve-fill: rgba(111,163,230,.18); --shift: #f0a35a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font: 16px/1.5 var(--f-body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font: 600 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 800 clamp(28px, 4vw, 40px)/1.1 var(--f-display); margin: 0; color: var(--navy); text-wrap: balance; }
+h2 { font: 700 18px/1.2 var(--f-display); margin: 0; color: var(--navy); }
+.lede { margin: 0; max-width: 72ch; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+label.lbl { font: 600 12px/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; }
+.seg button { font: inherit; color: var(--ink); background: var(--panel); border: 0; border-right: 1px solid var(--line); padding: 7px 14px; cursor: pointer; font-weight: 700; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--accent-soft); }
+.slider { display: grid; grid-template-columns: minmax(150px, 220px) 1fr 9ch; gap: 10px; align-items: center; }
+.slider output { font: 600 15px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--accent); min-width: 0; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; font-weight: 600; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--shift); }
+.readout { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); max-width: 80ch; }
+.readout strong { color: var(--navy); }
+.scroll { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 600px; height: auto; font-family: var(--f-body); }
+svg text { fill: var(--ink); }
+svg .muted { fill: var(--muted); }
+svg .mono { font-family: var(--f-mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 22px; height: 10px; border-radius: 2px; display: inline-block; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.kpi .k { font: 600 12px/1.3 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.kpi .v { font: 800 26px/1.15 var(--f-display); color: var(--navy); font-variant-numeric: tabular-nums; }
+.kpi .v.bad { color: var(--bad); }
+.kpi .f { font: 12px/1.4 var(--f-mono); color: var(--muted); }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--line); }
+th:first-child, td:first-child { text-align: left; }
+th.barcol, td.barcol { text-align: left; width: 30%; }
+thead th { background: var(--accent); color: var(--panel); font-weight: 700; font-size: 14px; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--accent-soft); }
+tbody tr.current { background: var(--accent-soft); font-weight: 700; }
+.bar { height: 10px; border-radius: 2px; background: var(--bad); min-width: 2px; }
+.note { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
+.takeaway { border-left: 4px solid var(--accent); padding: 4px 0 4px 12px; margin: 0; max-width: 80ch; }
+.concepts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.concept { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; }
+.concept h3 { margin: 0; font: 700 15px/1.3 var(--f-display); color: var(--navy); }
+.concept p { margin: 0; font-size: 15px; }
+.formula { font: 600 14px var(--f-mono); color: var(--accent); }
+details { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+details + details { margin-top: -4px; }
+summary { cursor: pointer; font-weight: 700; }
+details p { margin: 8px 0 0; }
+.btn { font: inherit; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 8px; padding: 6px 14px; font-weight: 700; cursor: pointer; }
+.btn:hover { background: var(--accent-soft); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 560px) { .slider { grid-template-columns: 1fr 8ch; } .slider label { grid-column: 1 / -1; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.sim-nav{display:flex;justify-content:space-between;align-items:center;gap:12px}.sim-nav a{color:var(--muted);font:600 14px/1.4 var(--f-body);text-decoration:none}.sim-nav a:hover{color:var(--accent)}.sim-nav-end{justify-content:center;padding-top:8px;border-top:1px solid var(--line)}
+.fs-btn{font:600 14px/1.4 var(--f-body);color:var(--muted);background:none;border:0;padding:0;cursor:pointer}.fs-btn:hover{color:var(--accent)}.fs-btn[hidden]{display:none}
+.canvas-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+canvas { display: block; width: 100%; min-width: 760px; height: auto; }
+.btnrow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn.solid { background: var(--accent); color: var(--panel); }
+.btn.solid:hover { background: var(--navy); border-color: var(--navy); }
+.btn.warn[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.warn { border-color: var(--bad); color: var(--bad); }
+select, input[type="number"] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+input[type="number"] { width: 8.5em; }
+.fld { display: grid; gap: 4px; font-size: 14px; }
+.fld span { color: var(--muted); }
+.check { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; font-size: 14px; }
+.msg { margin: 0; color: var(--bad); font-weight: 600; min-height: 1.4em; }
+.kpis.cards { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.kpi .v { font-size: 22px; }
+.kpi.theory { background: var(--accent-soft); }
+.kpi.alert { background: var(--bad-soft); }
+.legend2 { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend2 i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="sim-nav" aria-label="Site"><a href="../home.html">← All simulations</a><button type="button" class="fs-btn" hidden>⛶ Full screen</button></nav>
+  <header>
+    <span class="eyebrow">Quality Management · Variation</span>
+    <h1>From the Process to the Distribution</h1>
+    <p class="lede">Each dot is one <b>55" TV panel</b> leaving a cutting process. It is measured and lands in its place in the distribution. One panel is unpredictable; thousands of panels together form a bell curve with a mean μ and a standard deviation σ. Run the process, then break it with a special cause.</p>
+  </header>
+
+  <section class="panel" aria-label="Controls">
+    <div class="btnrow">
+      <button type="button" class="btn solid" id="go" aria-pressed="false">▶ Start production</button>
+      <button type="button" class="btn" id="b1">+ 1 panel</button>
+      <button type="button" class="btn" id="b100">+ 100</button>
+      <button type="button" class="btn" id="b1000">⚡ +1,000 instantly</button>
+      <button type="button" class="btn" id="reset">↺ Reset</button>
+      <label class="fld" style="display:inline-grid;grid-auto-flow:column;align-items:center;gap:8px"><span>Speed</span>
+        <select id="rate" aria-label="Production speed">
+          <option value="1">1 panel/s (with values)</option><option value="2" selected>2 panels/s (with values)</option>
+          <option value="10">10 panels/s</option><option value="40">40 panels/s</option><option value="150">150 panels/s</option>
+        </select></label>
+      <label class="check"><input type="checkbox" id="curve" checked> Normal curve</label>
+      <label class="check"><input type="checkbox" id="zones" checked> σ zones</label>
+    </div>
+    <div class="btnrow">
+      <button type="button" class="btn warn" id="special" aria-pressed="false">⚠ Special cause: new blade shifts the mean by +1.5σ</button>
+      <span class="note" id="special-note">Off: only common-cause variation.</span>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Production and distribution">
+    <div class="row" style="justify-content:space-between"><h2>Production line and distribution</h2>
+      <div class="legend2"><span><i style="background:#2563eb"></i>in spec</span><span><i style="background:#dc2626"></i>out of spec</span><span><i style="background:#9333ea;border-radius:2px;height:3px;width:18px"></i>theoretical normal curve</span></div></div>
+    <div class="canvas-wrap"><canvas id="dist" width="1000" height="600" role="img" aria-label="Animated production line: panels fall from a cutting machine and stack into a histogram of panel widths with specification limits and a normal curve"></canvas></div>
+    <p class="readout" id="status" aria-live="polite">Press Start production, or add single panels, and watch the distribution grow.</p>
+  </section>
+
+  <section class="panel" aria-label="Run chart">
+    <h2>The same panels in production order</h2>
+    <p class="note">Each point is one panel, oldest on the left. The grey lines are μ ± 3σ of the normal process. Points that fall outside them signal that something has changed.</p>
+    <div class="canvas-wrap"><canvas id="run" width="1000" height="230" role="img" aria-label="Run chart of the last 100 panel widths with centre line and three-sigma limits"></canvas></div>
+  </section>
+
+  <section class="kpis cards" id="kpis" aria-label="Results"></section>
+
+  <section class="panel" aria-label="Process parameters">
+    <h2>Process and specification</h2>
+    <div class="btnrow" role="group" aria-label="Presets" id="presets"></div>
+    <div class="row">
+      <label class="fld"><span>Process mean μ (mm)</span><input type="number" step="0.01" id="mu" value="1210.00"></label>
+      <label class="fld"><span>Std. deviation σ (mm)</span><input type="number" step="0.01" min="0.01" id="sd" value="0.30"></label>
+      <label class="fld"><span>LSL (mm)</span><input type="number" step="0.01" id="lsl" value="1209.10"></label>
+      <label class="fld"><span>USL (mm)</span><input type="number" step="0.01" id="usl" value="1210.90"></label>
+      <button type="button" class="btn solid" id="apply">Apply and reset</button>
+    </div>
+    <p class="msg" id="msg" role="alert"></p>
+  </section>
+
+  <section class="panel" aria-label="Key ideas">
+    <h2>Key ideas</h2>
+    <div class="concepts">
+      <div class="concept"><h3>One panel is a surprise, many are a pattern</h3><p>You cannot predict the next width, but you can predict the shape of the thousand panels that follow: bell-shaped, centred on μ, with spread σ.</p></div>
+      <div class="concept"><h3>68 – 95 – 99.7</h3><p>About 68 % of panels fall within ±1σ, 95 % within ±2σ and 99.7 % within ±3σ. With few panels the shares wobble; with thousands they settle on these values.</p></div>
+      <div class="concept"><h3>σ belongs to the process, the limits to the customer</h3><p>The red zones come from the specification. To get fewer red dots you reduce σ, or move μ to the centre of the limits.</p></div>
+      <div class="concept"><h3>Common cause vs special cause</h3><p>Normal variation is common-cause: it is always there. A shift in the mean is a special cause: the run chart shows it, and the histogram no longer matches the curve.</p></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Check your understanding">
+    <h2>Check your understanding</h2>
+    <details><summary>1. Add 20 panels, then 2,000. Why does the small histogram look ragged and the large one match the curve?</summary><p>A small sample is a lottery draw: chance moves the dots around. The curve describes the process, not a handful of panels. As the number of panels grows, the observed shares approach the theoretical ones (the cards for ±1σ, ±2σ, ±3σ move to 68, 95 and 99.7 %).</p></details>
+    <details><summary>2. Load "Cp = 1.0", then "Cp = 1.33" and "Cp = 2.0". How many panels per million are out of spec in theory?</summary><p>For a centred process: about 2,700 (0.27 %) at Cp = 1.0 (3σ limits), 63 at Cp = 1.33 (4σ limits) and about 0.002 at Cp = 2.0 (6σ limits). Same specification, smaller σ.</p></details>
+    <details><summary>3. Load "Cp = 1.0", run 1,000 panels, then switch on the special cause and run 1,000 more. What changes in the run chart and in the histogram?</summary><p>The points jump up by 1.5σ and many end up above the upper control line. The histogram gets wider and lopsided and no longer fits the curve. Out of spec rises to about 6.7 % (66,807 per million), the same value the Six Sigma convention gives for a 3σ process that drifts by 1.5σ.</p></details>
+    <details><summary>4. Load "Off-centre". Cp looks excellent, so why are so many panels red?</summary><p>Cp only compares the width of the process with the width of the limits. The mean is close to the USL, so the nearest limit is only 2.25σ away: Cpk = 0.75 and about 1.2 % of panels are out of spec. Re-centre the mean and the problem disappears without touching σ.</p></details>
+  </section>
+
+  <nav class="sim-nav sim-nav-end" aria-label="Site"><a href="../home.html">← All simulations</a></nav>
+</div>
+
+<script>
+const W = 1000, H = 600, LEFT = 60, RIGHT = 960, PLOT_W = RIGHT - LEFT, BASE_Y = 530, TOP_Y = 165;
+const NBINS = 40, BIN_PX = PLOT_W / NBINS, OUT_X = 500, OUT_Y = 120, MAX = 20000, SHIFT = 1.5, RUN_N = 100;
+const FONT = '"Source Sans 3", "Segoe UI", Arial, sans-serif';
+const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function randn() { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function erfc(x) { const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+  const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  return x >= 0 ? r : 2 - r; }
+const Q = z => 0.5 * erfc(z / Math.SQRT2);           // upper tail P(Z > z), accurate far into the tail
+const Phi = z => 1 - Q(z);
+const phi = z => Math.exp(-0.5 * z * z) / Math.sqrt(2 * Math.PI);
+
+let P = { mu: 1210, sigma: 0.3, lsl: 1209.1, usl: 1210.9 };
+const ui = { running: false, rate: 2, curve: true, zones: true, special: false };
+const newSim = () => ({ inC: new Array(NBINS).fill(0), outC: new Array(NBINS).fill(0), particles: [], acc: 0, queue: 0, qacc: 0, flash: 0,
+  last: null, lastSp: false, n: 0, sum: 0, sumsq: 0, w1: 0, w2: 0, w3: 0, out: 0, run: [] });
+let sim = newSim();
+
+function makeSample() {
+  const sp = ui.special, v = P.mu + (sp ? SHIFT * P.sigma : 0) + P.sigma * randn();
+  let idx = Math.floor((v - (P.mu - 4 * P.sigma)) / ((8 * P.sigma) / NBINS));
+  idx = Math.max(0, Math.min(NBINS - 1, idx));
+  return { v, idx, sp };
+}
+const inSpec = v => v >= P.lsl && v <= P.usl;
+function land(s, v, idx, sp) {
+  (inSpec(v) ? s.inC : s.outC)[idx]++;
+  s.n++; s.sum += v; s.sumsq += v * v;
+  const z = Math.abs(v - P.mu) / P.sigma;
+  if (z <= 1) s.w1++; if (z <= 2) s.w2++; if (z <= 3) s.w3++;
+  if (!inSpec(v)) s.out++;
+  s.run.push({ v, sp }); if (s.run.length > RUN_N) s.run.shift();
+}
+function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.quadraticCurveTo(x + w, y, x + w, y + r); c.lineTo(x + w, y + h - r); c.quadraticCurveTo(x + w, y + h, x + w - r, y + h); c.lineTo(x + r, y + h); c.quadraticCurveTo(x, y + h, x, y + h - r); c.lineTo(x, y + r); c.quadraticCurveTo(x, y, x + r, y); c.closePath(); }
+
+function setupCanvas(cv, w, h) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); return c;
+}
+const ctx = setupCanvas($("dist"), W, H), ctx2 = setupCanvas($("run"), W, 230);
+
+function draw(c, s, time) {
+  const { mu, sigma, lsl, usl } = P;
+  const xOf = v => LEFT + ((v - (mu - 4 * sigma)) / (8 * sigma)) * PLOT_W;
+  c.clearRect(0, 0, W, H); c.fillStyle = "#ffffff"; c.fillRect(0, 0, W, H);
+  const n = s.n; let maxCount = 0;
+  for (let i = 0; i < NBINS; i++) maxCount = Math.max(maxCount, s.inC[i] + s.outC[i]);
+  const expectedPeak = n * (Phi(0.1) - Phi(-0.1));
+  const dotH = Math.min(BIN_PX, (BASE_Y - TOP_Y) / Math.max(1, maxCount + 1, expectedPeak * 1.08));
+  if (ui.zones) [[3, "#eef2ff"], [2, "#e0e7ff"], [1, "#c7d2fe"]].forEach(([k, col]) => { c.fillStyle = col; const x1 = xOf(mu - k * sigma), x2 = xOf(mu + k * sigma); c.fillRect(x1, TOP_Y - 15, x2 - x1, BASE_Y - TOP_Y + 15); });
+  c.fillStyle = "rgba(239,68,68,0.08)";
+  const xl = Math.max(LEFT, Math.min(RIGHT, xOf(lsl))), xu = Math.max(LEFT, Math.min(RIGHT, xOf(usl)));
+  c.fillRect(LEFT, TOP_Y - 15, xl - LEFT, BASE_Y - TOP_Y + 15); c.fillRect(xu, TOP_Y - 15, RIGHT - xu, BASE_Y - TOP_Y + 15);
+  // limits: if one lies beyond ±4σ, say so at the edge instead of silently dropping it
+  c.setLineDash([6, 4]); c.lineWidth = 2; c.strokeStyle = "#dc2626"; c.fillStyle = "#dc2626"; c.font = "bold 13px " + FONT;
+  [[lsl, "LSL", -1], [usl, "USL", 1]].forEach(([v, l, side]) => {
+    const x = xOf(v);
+    if (x >= LEFT && x <= RIGHT) { c.textAlign = "center"; c.beginPath(); c.moveTo(x, TOP_Y - 25); c.lineTo(x, BASE_Y); c.stroke(); c.fillText(`${l} ${v.toFixed(2)}`, x, TOP_Y - 30); }
+    else { c.textAlign = side < 0 ? "left" : "right"; const z = (v - mu) / sigma; c.fillText(`${side < 0 ? "◄" : ""} ${l} ${v.toFixed(2)} (${z >= 0 ? "+" : "−"}${Math.abs(z).toFixed(1)}σ) ${side > 0 ? "►" : ""}`, side < 0 ? LEFT + 4 : RIGHT - 4, TOP_Y - 30); }
+  });
+  c.setLineDash([]); c.strokeStyle = "#111827"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(xOf(mu), TOP_Y - 15); c.lineTo(xOf(mu), BASE_Y); c.stroke();
+  // stacks: blue (in spec) at the bottom, red (out of spec) on top, so the colours match the exact limits
+  const r = Math.min(BIN_PX / 2 - 1.5, dotH / 2 - 0.3);
+  for (let i = 0; i < NBINS; i++) {
+    const a = s.inC[i], b = s.outC[i]; if (!a && !b) continue;
+    const cx = LEFT + (i + 0.5) * BIN_PX;
+    [[a, 0, "#3b82f6"], [b, a, "#ef4444"]].forEach(([cnt, base, col]) => {
+      if (!cnt) return; c.fillStyle = col;
+      if (r >= 2) for (let k = 0; k < cnt; k++) { c.beginPath(); c.arc(cx, BASE_Y - (base + k + 0.5) * dotH, r, 0, Math.PI * 2); c.fill(); }
+      else c.fillRect(cx - BIN_PX / 2 + 1, BASE_Y - (base + cnt) * dotH, BIN_PX - 2, cnt * dotH);
+    });
+  }
+  if (ui.curve && n > 0) { c.strokeStyle = "#9333ea"; c.lineWidth = 3; c.beginPath();
+    for (let px = LEFT; px <= RIGHT; px += 3) { const z = ((px - LEFT) / PLOT_W) * 8 - 4, y = BASE_Y - n * 0.2 * phi(z) * dotH; px === LEFT ? c.moveTo(px, y) : c.lineTo(px, y); } c.stroke(); }
+  c.strokeStyle = "#374151"; c.lineWidth = 2; c.beginPath(); c.moveTo(LEFT, BASE_Y); c.lineTo(RIGHT, BASE_Y); c.stroke();
+  c.lineWidth = 1; c.textAlign = "center";
+  for (let k = -4; k <= 4; k++) { const x = xOf(mu + k * sigma);
+    c.beginPath(); c.moveTo(x, BASE_Y); c.lineTo(x, BASE_Y + 6); c.stroke();
+    c.fillStyle = "#111827"; c.font = "12px " + FONT; c.fillText((mu + k * sigma).toFixed(2), x, BASE_Y + 22);
+    c.fillStyle = "#5b6876"; c.font = "11px " + FONT; c.fillText(k === 0 ? "μ" : `${k > 0 ? "+" : "−"}${Math.abs(k)}σ`, x, BASE_Y + 38); }
+  c.fillStyle = "#374151"; c.font = "bold 12px " + FONT; c.fillText("Panel width (mm)", (LEFT + RIGHT) / 2, BASE_Y + 60);
+  // chute and machine
+  c.fillStyle = "#4b5563"; c.beginPath(); c.moveTo(470, 105); c.lineTo(530, 105); c.lineTo(512, OUT_Y); c.lineTo(488, OUT_Y); c.closePath(); c.fill();
+  rrect(c, 360, 12, 280, 93, 12); c.fillStyle = "#1f2937"; c.fill();
+  c.fillStyle = "#ffffff"; c.textAlign = "center"; c.font = "bold 15px " + FONT; c.fillText("LCD PANEL CUTTING PROCESS", 500, 40);
+  c.font = "13px " + FONT; c.fillStyle = "#d1d5db"; c.fillText(`μ = ${mu.toFixed(2)} mm    σ = ${sigma.toFixed(2)} mm`, 500, 64);
+  c.fillStyle = ui.special ? "#fca5a5" : "#d1d5db"; c.font = (ui.special ? "bold " : "") + "13px " + FONT;
+  c.fillText(ui.special ? "SPECIAL CAUSE: mean shifted +1.5σ" : "common-cause variation only", 500, 86);
+  for (let g = 0; g < 2; g++) { const gx = g === 0 ? 385 : 615, gy = 58;
+    c.save(); c.translate(gx, gy); c.rotate(ui.running && !reduced ? time * (g ? -2 : 2) : 0); c.fillStyle = "#6b7280";
+    for (let t = 0; t < 8; t++) { c.rotate(Math.PI / 4); c.fillRect(-3, -14, 6, 7); }
+    c.beginPath(); c.arc(0, 0, 9, 0, Math.PI * 2); c.fill(); c.fillStyle = "#1f2937"; c.beginPath(); c.arc(0, 0, 3, 0, Math.PI * 2); c.fill(); c.restore(); }
+  c.fillStyle = `rgba(16,185,129,${0.3 + 0.7 * s.flash})`; c.beginPath(); c.arc(625, 24, 6, 0, Math.PI * 2); c.fill();
+  c.textAlign = "left"; c.fillStyle = "#5b6876"; c.font = "12px " + FONT; c.fillText("Last panel measured", 30, 35);
+  if (s.last !== null) { const ok = inSpec(s.last); c.fillStyle = ok ? "#059669" : "#dc2626"; c.font = "bold 22px " + FONT; c.fillText(`${s.last.toFixed(3)} mm`, 30, 62);
+    c.font = "bold 12px " + FONT; c.fillText(ok ? "✓ in spec" : "✗ OUT OF SPEC", 30, 82); }
+  else { c.fillStyle = "#9ca3af"; c.font = "bold 22px " + FONT; c.fillText("—", 30, 62); }
+  c.textAlign = "right"; c.fillStyle = "#5b6876"; c.font = "12px " + FONT; c.fillText("Panels in distribution", 970, 35);
+  c.fillStyle = "#111827"; c.font = "bold 22px " + FONT; c.fillText(n.toLocaleString("en-US"), 970, 62);
+  c.fillStyle = "#5b6876"; c.font = "12px " + FONT; c.fillText(`in flight: ${s.particles.length}`, 970, 82);
+  const pr = Math.max(4, Math.min(8, r));
+  s.particles.forEach(pt => {
+    const e = Math.min(1, pt.t), xt = LEFT + (pt.idx + 0.5) * BIN_PX, yt = BASE_Y - (s.inC[pt.idx] + s.outC[pt.idx] + 0.5) * dotH;
+    const x = OUT_X + (xt - OUT_X) * (1 - (1 - e) * (1 - e)), y = OUT_Y + (yt - OUT_Y) * e * e;
+    c.fillStyle = inSpec(pt.v) ? "#2563eb" : "#dc2626"; c.strokeStyle = "#ffffff"; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(x, y, pr, 0, Math.PI * 2); c.fill(); c.stroke();
+    if (ui.rate <= 3) { c.fillStyle = "#111827"; c.font = "bold 12px " + FONT; c.textAlign = "left"; c.fillText(pt.v.toFixed(3), x + 10, y + 4); }
+  });
+}
+
+function drawRun(c, s) {
+  const w = 1000, h = 230, L = 60, R = 960, T = 28, B = 28, { mu, sigma, lsl, usl } = P;
+  c.clearRect(0, 0, w, h); c.fillStyle = "#fff"; c.fillRect(0, 0, w, h);
+  const yMin = mu - 4.5 * sigma, yMax = mu + 4.5 * sigma, py = v => h - B - (v - yMin) / (yMax - yMin) * (h - T - B);
+  c.font = "12px " + FONT; c.textAlign = "right";
+  [[mu + 3 * sigma, "μ + 3σ"], [mu, "μ"], [mu - 3 * sigma, "μ − 3σ"]].forEach(([v, l]) => {
+    c.strokeStyle = v === mu ? "#111827" : "#9ca3af"; c.lineWidth = v === mu ? 1.5 : 1.2; c.setLineDash(v === mu ? [] : [6, 4]);
+    c.beginPath(); c.moveTo(L, py(v)); c.lineTo(R, py(v)); c.stroke(); c.fillStyle = "#5b6876"; c.fillText(l, L - 6, py(v) + 4); });
+  c.setLineDash([3, 3]); c.strokeStyle = "#dc2626"; c.fillStyle = "#dc2626";
+  [[usl, "USL"], [lsl, "LSL"]].forEach(([v, l]) => { if (v >= yMin && v <= yMax) { c.beginPath(); c.moveTo(L, py(v)); c.lineTo(R, py(v)); c.stroke(); c.textAlign = "left"; c.fillText(l, R + 4 - 36, py(v) - 4); } });
+  c.setLineDash([]);
+  const pts = s.run, dx = (R - L) / (RUN_N - 1);
+  c.strokeStyle = "#cbd5e1"; c.lineWidth = 1; c.beginPath();
+  pts.forEach((p, i) => { const x = L + i * dx, y = Math.max(T - 6, Math.min(h - B + 6, py(p.v))); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke();
+  pts.forEach((p, i) => { const x = L + i * dx, y = Math.max(T - 6, Math.min(h - B + 6, py(p.v))), beyond = Math.abs(p.v - mu) > 3 * sigma;
+    c.fillStyle = inSpec(p.v) ? "#2563eb" : "#dc2626"; c.beginPath(); c.arc(x, y, 3.6, 0, Math.PI * 2); c.fill();
+    if (beyond) { c.strokeStyle = "#111827"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, 6.5, 0, Math.PI * 2); c.stroke(); } });
+  c.textAlign = "left"; c.fillStyle = "#5b6876"; c.font = "12px " + FONT;
+  c.fillText(pts.length ? "◄ older        ringed point = beyond μ ± 3σ        newer ►" : "Run chart: panels appear here in production order", L, 14);
+}
+
+function updateCards() {
+  const s = sim, n = s.n, mean = n ? s.sum / n : 0, sd = n > 1 ? Math.sqrt(Math.max(0, (s.sumsq - s.sum * s.sum / n) / (n - 1))) : 0;
+  const pct = x => n ? ((x / n) * 100).toFixed(2) + " %" : "–";
+  const zl = (P.lsl - P.mu) / P.sigma, zu = (P.usl - P.mu) / P.sigma, tOut = Q(zu) + Phi(zl);
+  const cp = (P.usl - P.lsl) / (6 * P.sigma), cpk = Math.min(P.usl - P.mu, P.mu - P.lsl) / (3 * P.sigma);
+  const dp = tOut * 1e6, fd = dp >= 100 ? Math.round(dp).toLocaleString("en-US") : dp >= 1 ? dp.toFixed(1) : dp.toPrecision(2);
+  const card = (k, v, f, cls = "") => `<div class="kpi ${cls}"><span class="k">${k}</span><span class="v">${v}</span><span class="f">${f}</span></div>`;
+  $("kpis").innerHTML = card("Panels", n.toLocaleString("en-US"), `${s.out.toLocaleString("en-US")} out of spec`) +
+    card("Sample mean x̄", n ? mean.toFixed(3) : "–", `μ = ${P.mu.toFixed(3)}`) + card("Sample std. s", n > 1 ? sd.toFixed(3) : "–", `σ = ${P.sigma.toFixed(3)}`) +
+    card("Within μ ± 1σ", pct(s.w1), "theory 68.27 %", "theory") + card("Within μ ± 2σ", pct(s.w2), "theory 95.45 %", "theory") + card("Within μ ± 3σ", pct(s.w3), "theory 99.73 %", "theory") +
+    card("Out of spec (observed)", pct(s.out), `theory ${(tOut * 100).toPrecision(2)} % = ${fd} per million`, s.out && n ? "alert" : "") +
+    card("Cp", cp.toFixed(2), "(USL − LSL) / 6σ") + card("Cpk", cpk.toFixed(2), "min(USL − μ, μ − LSL) / 3σ");
+  const sn = $("status");
+  if (!n) sn.textContent = "Press Start production, or add single panels, and watch the distribution grow.";
+  else sn.innerHTML = `<strong>${n.toLocaleString("en-US")}</strong> panels so far: ${pct(s.w1)} within ±1σ, ${pct(s.w2)} within ±2σ and ${pct(s.w3)} within ±3σ` + (n < 200 ? ". With so few panels, chance still dominates." : ".") +
+    (ui.special ? " The special cause is on, so the pattern drifts away from the curve." : "");
+}
+
+let prev = performance.now(), time = 0;
+function spawn(s, rate) {
+  if (s.n + s.particles.length >= MAX) return;
+  const { v, idx, sp } = makeSample(); const dur = reduced ? 0.35 : rate <= 3 ? 1.4 : rate <= 20 ? 0.9 : 0.6;
+  s.particles.push({ v, idx, sp, t: 0, dur }); s.flash = 1; s.last = v;
+}
+function loop(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now; time += dt; const s = sim;
+  if (ui.running) { s.acc += dt * ui.rate; while (s.acc >= 1) { spawn(s, ui.rate); s.acc -= 1; } }
+  if (s.queue > 0) { s.qacc += dt * 150; while (s.qacc >= 1 && s.queue > 0) { spawn(s, 100); s.qacc -= 1; s.queue--; } }
+  const still = []; s.particles.forEach(p => { p.t += dt / p.dur; if (p.t >= 1) land(s, p.v, p.idx, p.sp); else still.push(p); }); s.particles = still;
+  s.flash = Math.max(0, s.flash - dt * 4);
+  if (s.n >= MAX && ui.running) setRunning(false);
+  draw(ctx, s, time); drawRun(ctx2, s); requestAnimationFrame(loop);
+}
+function setRunning(v) { ui.running = v; $("go").textContent = v ? "⏸ Pause" : "▶ Start production"; $("go").setAttribute("aria-pressed", String(v)); }
+function addInstant(k) { const s = sim, m = Math.min(k, MAX - s.n - s.particles.length); for (let i = 0; i < m; i++) { const x = makeSample(); land(s, x.v, x.idx, x.sp); s.last = x.v; } updateCards(); }
+function reset() { setRunning(false); sim = newSim(); updateCards(); }
+function setSpecial(v) { ui.special = v; const b = $("special"); b.setAttribute("aria-pressed", String(v)); $("special-note").textContent = v ? "On: every new panel is cut with the mean shifted by +1.5σ." : "Off: only common-cause variation."; updateCards(); }
+
+function apply(p) {
+  const msg = $("msg"); msg.textContent = "";
+  if ([p.mu, p.sigma, p.lsl, p.usl].some(x => !isFinite(x))) { msg.textContent = "Please enter a number in every field."; return; }
+  if (p.sigma <= 0) { msg.textContent = "The standard deviation must be positive."; return; }
+  if (p.lsl >= p.usl) { msg.textContent = "The lower limit (LSL) must be below the upper limit (USL)."; return; }
+  P = p; setSpecial(false); reset();
+}
+function fill(p) { $("mu").value = p.mu.toFixed(2); $("sd").value = p.sigma.toFixed(2); $("lsl").value = p.lsl.toFixed(2); $("usl").value = p.usl.toFixed(2); }
+const PRESETS = [
+  ["Cp = 1.0 (3σ limits)", { mu: 1210, sigma: 0.3, lsl: 1209.1, usl: 1210.9 }],
+  ["Cp = 1.33 (4σ)", { mu: 1210, sigma: 0.225, lsl: 1209.1, usl: 1210.9 }],
+  ["Cp = 2.0 (6σ)", { mu: 1210, sigma: 0.15, lsl: 1209.1, usl: 1210.9 }],
+  ["Too wide (Cp = 0.67)", { mu: 1210, sigma: 0.45, lsl: 1209.1, usl: 1210.9 }],
+  ["Off-centre (Cp 1.5, Cpk 0.75)", { mu: 1210.45, sigma: 0.2, lsl: 1209.1, usl: 1210.9 }],
+];
+$("presets").innerHTML = '<span class="note" style="margin-right:4px">Presets:</span>' + PRESETS.map(([l], i) => `<button type="button" class="btn" data-i="${i}">${l}</button>`).join("");
+$("presets").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { const p = PRESETS[+b.dataset.i][1]; fill(p); apply({ ...p }); }));
+$("apply").addEventListener("click", () => apply({ mu: parseFloat($("mu").value), sigma: parseFloat($("sd").value), lsl: parseFloat($("lsl").value), usl: parseFloat($("usl").value) }));
+$("go").addEventListener("click", () => setRunning(!ui.running));
+$("b1").addEventListener("click", () => { sim.queue += 1; sim.qacc = Math.max(sim.qacc, 0.99); });
+$("b100").addEventListener("click", () => { sim.queue += 100; });
+$("b1000").addEventListener("click", () => addInstant(1000));
+$("reset").addEventListener("click", reset);
+$("rate").addEventListener("change", e => { ui.rate = parseFloat(e.target.value); });
+$("curve").addEventListener("change", e => { ui.curve = e.target.checked; });
+$("zones").addEventListener("change", e => { ui.zones = e.target.checked; });
+$("special").addEventListener("click", () => setSpecial(!ui.special));
+setInterval(updateCards, 200); updateCards(); requestAnimationFrame(t => { prev = t; loop(t); });
+window.__sim = { get s() { return sim; }, get P() { return P; }, addInstant, setSpecial, apply };
+</script>
+<script src="../shared/fullscreen.js"></script>
+</body>
+</html>
