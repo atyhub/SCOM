@@ -23,9 +23,3 @@ transportation, inventory, aggregate-planning, scheduling, quality, lean.
 
 Pages inside a topic folder link to `../home.html` and load `../shared/fullscreen.js`.
 Do not put slides or textbook material here: the repository is public.
-
-## Licence
-
-© 2026 Ali Türkyılmaz, University of Stavanger. The materials in this repository are
-licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/): you may
-share and adapt them for non-commercial purposes with attribution. See [LICENSE](LICENSE).
