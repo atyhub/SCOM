@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>MSB255 Interactive Materials</title>
+<title>SCOM Lab · MSB255</title>
 <meta name="description" content="Interactive simulations and materials for MSB255 Supply Chain and Operations Management, University of Stavanger, School of Business and Law.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -28,6 +28,7 @@ body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);margin:0
 header{display:grid;gap:8px}
 .eyebrow{font:600 11px/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
 h1{font:700 clamp(28px,5vw,44px)/1.08 var(--f-display);margin:0;text-wrap:balance}
+.course{font:600 clamp(17px,2.4vw,21px)/1.25 var(--f-display);color:var(--ink);margin:0}
 .lede{color:var(--muted);max-width:68ch;margin:0}
 section{display:grid;gap:14px}
 .topic-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;border-bottom:1px solid var(--line);padding-bottom:8px}
@@ -54,7 +55,8 @@ footer b{color:var(--ink);font-weight:600}
 <div class="wrap">
   <header>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span class="eyebrow">University of Stavanger · School of Business and Law</span><button type="button" class="fs-btn" hidden>⛶ Full screen</button></div>
-    <h1>MSB255 Supply Chain and Operations Management</h1>
+    <h1>SCOM Lab</h1>
+    <p class="course">MSB255 Supply Chain and Operations Management</p>
     <p class="lede">Interactive simulations for the lectures. Move the sliders, watch the models react, and check your understanding with the built-in questions. New materials are added as the course progresses.</p>
   </header>
 
@@ -87,7 +89,7 @@ const TOPICS = [
   {
     title: "Scheduling",
     items: [
-      { title: "Flow Time Lab",            text: "Sequencing rules in motion: waiting builds flow time, and the area under jobs-in-system is the total.", file: "scheduling/flow-time-lab.html", live: true }
+      { title: "Flow Time",                text: "Sequencing rules in motion: waiting builds flow time, and the area under jobs-in-system is the total.", file: "scheduling/flow-time-lab.html", live: true }
     ]
   },
   {
